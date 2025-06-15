@@ -29,16 +29,20 @@ public static class CH01DOM01
             {
                 continue;
             }
-            
-            Common.Log($"Plotting DOMOutput-{output.GetUniqueName()} processing started!");
+
+            Common.Log($"Plotting {output.GetUniqueName()} started!");
 
             ScottPlot.Plot plt = new();
-            plt.Add.Scatter([.. Enumerable.Range(0, output.Input.NumberOfAgents).Select(x => (double)x)], output.Agents);
+            plt.Add.Scatter(
+                [.. Enumerable.Range(0, output.Input.NumberOfAgents).Select(x => (double)x)],
+                output.Agents);
 
             plt.SaveSvg(
                 Path.Combine(Common.OutputDir, $"{output.GetUniqueName()}.svg"),
                 width: 1920,
                 height: 1080);
+                
+            Common.Log($"Plotting {output.GetUniqueName()} finished!");
         }
     }
 

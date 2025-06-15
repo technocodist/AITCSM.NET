@@ -25,9 +25,34 @@ public static class CH01DOM02
         await Common.WriteToJson(domSavingOutputs);
     }
 
+    public static void DefaultPlot()
+    {
+        DOMSavingOutput?[] domOutputs = Common.ReadToObject<DOMSavingOutput>(typeof(DOMSavingOutput).FullName!);
+
+        foreach (DOMSavingOutput? output in domOutputs)
+        {
+            if (output == null)
+            {
+                continue;
+            }
+
+            Common.Log($"Plotting {output.GetUniqueName()} started!");
+
+            ScottPlot.Plot plt = new();
+            plt.Add.Scatter([.. Enumerable.Range(0, output.Input.NumberOfAgents).Select(x => (double)x)], output.Agents);
+
+            plt.SaveSvg(
+                Path.Combine(Common.OutputDir, $"{output.GetUniqueName()}.svg"),
+                width: 1920,
+                height: 1080);
+
+                Common.Log($"Plotting {output.GetUniqueName()} finished!");
+        }
+    }
+
     public static DOMSavingOutput Simulate(DOMSavingInput input)
     {
-        Common.Log($"DOMSavingInput-{input.GetHashCode()} processing started!");
+        Common.Log($"{input.GetUniqueName()} processing started!");
         double[] agents = [.. Enumerable.Range(0, input.NumberOfAgents).Select(_ => input.InitialMoney)];
 
         for (int i = 0; i < input.NumberOfIterations; i++)
@@ -48,7 +73,7 @@ public static class CH01DOM02
 
         }
 
-        Common.Log($"DOMSavingInput-{input.GetHashCode()} processing finished!");
+        Common.Log($"{input.GetUniqueName()} processing finished!");
         return new(input.Id, input, agents);
     }
 }
