@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AITCSM.NET.Base;
@@ -6,11 +7,30 @@ namespace AITCSM.NET;
 
 public static class Common
 {
-    public static JsonSerializerOptions JsonSerializerOptions { get; } = new() {
+    public static JsonSerializerOptions JsonSerializerOptions { get; } = new()
+    {
         WriteIndented = true,
-        NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals };
+        NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals
+    };
 
-    public static string OutputDir { get; } = "Results";
+    public static string OutputDir { get; } = "./Results";
+
+    public static TOut?[] ReadToObject<TOut>(string name)
+    where TOut : class
+    {
+        if (!Directory.Exists(OutputDir))
+        {
+            Directory.CreateDirectory(OutputDir);
+        }
+
+        string[] files = [.. Directory.GetFiles(OutputDir).Where(fileName => fileName.Contains(name) && fileName.EndsWith(".json"))];
+
+        return [.. files
+            .Select(filePath => JsonSerializer
+                .Deserialize<TOut>(
+                    File.ReadAllText(filePath),
+                    JsonSerializerOptions))];
+    }
 
     public static async Task WriteToJson<T>(IEnumerable<T> inputs)
         where T : notnull, Identifyable
@@ -23,7 +43,7 @@ public static class Common
         Task[] tasks = [.. inputs.Select(input => Task.Run(() =>
         {
             File.WriteAllText(
-                Path.Combine(OutputDir, $"{typeof(T).FullName}_{input.Id}.json"),
+                Path.Combine(OutputDir, $"{input.GetUniqueName()}.json"),
                 JsonSerializer.Serialize(input, JsonSerializerOptions));
         }))];
 

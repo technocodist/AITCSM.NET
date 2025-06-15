@@ -1,6 +1,8 @@
 ﻿using AITCSM.NET.Implementations;
 
-await Task.WhenAll([
-    CH01DOM01.DefaultSimulate(),
-    CH01DOM02.DefaultSimulate()
-    ]);
+// await Task.WhenAll([
+//     CH01DOM01.DefaultSimulate(),
+//     CH01DOM02.DefaultSimulate()
+//     ]);
+
+CH01DOM01.DefaultPlot();

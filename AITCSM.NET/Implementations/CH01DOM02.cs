@@ -4,8 +4,8 @@ namespace AITCSM.NET.Implementations;
 
 public static class CH01DOM02
 {
-    public record DOMSavingInput(int Id,int NumberOfAgents, double InitialMoney, int NumberOfIterations, double Lambda) : Identifyable(Id);
-    public record DOMSavingOutput(int Id,DOMSavingInput Input, double[] Agents) : Identifyable(Id);
+    public record DOMSavingInput(int Id, int NumberOfAgents, double InitialMoney, int NumberOfIterations, double Lambda) : Identifyable(Id);
+    public record DOMSavingOutput(int Id, DOMSavingInput Input, double[] Agents) : Identifyable(Id);
 
     public static async Task DefaultSimulate()
     {

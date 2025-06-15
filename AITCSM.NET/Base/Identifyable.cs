@@ -1,8 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 namespace AITCSM.NET.Base;
 
-    public record Identifyable(int Id);
+public record Identifyable(int Id)
+{
+    public string GetUniqueName()
+    {
+        return $"{GetType().FullName}_{Id}";
+    }
+}
