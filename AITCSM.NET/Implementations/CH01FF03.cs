@@ -1,5 +1,5 @@
-﻿using AITCSM.NET.Base;
-using ScottPlot.Plottables;
+﻿using System.Diagnostics;
+using AITCSM.NET.Base;
 
 namespace AITCSM.NET.Implementations;
 
@@ -13,6 +13,7 @@ public static class CH01FF03
         double InitialHeight,
         double Mass,
         double Gravity) : Identifyable(Id);
+        
     public record FFOutput(
         int Id,
         FFInput Input,
@@ -35,22 +36,35 @@ public static class CH01FF03
 
     public static async Task DefaultSimulate()
     {
+        Debug.Assert(Inputs is not null && Inputs.Length > 0, "Simulation input list is empty or null.");
         IEnumerable<FFOutput> outputs = await Common.BatchOperate(Inputs, Simulate);
+        Debug.Assert(outputs is not null, "BatchOperate returned null.");
         await Common.WriteToJson(outputs);
     }
 
     public static async Task DefaultPlot()
     {
         FFOutput?[] outputs = Common.ReadToObject<FFOutput>(typeof(FFOutput).FullName!);
+        Debug.Assert(outputs is not null, "ReadToObject returned null.");
 
         static void Plotter(FFOutput output)
         {
+            Debug.Assert(output is not null, "Output is null.");
+            Debug.Assert(output.TimeSteps is not null, "TimeSteps array is null.");
+            Debug.Assert(output.Velocities is not null, "Velocities array is null.");
+            Debug.Assert(output.Positions is not null, "Positions array is null.");
+
+            int n = output.Input.StepCount;
+            Debug.Assert(output.TimeSteps.Length == n, $"TimeSteps.Length != StepCount ({n})");
+            Debug.Assert(output.Velocities.Length == n, $"Velocities.Length != StepCount ({n})");
+            Debug.Assert(output.Positions.Length == n, $"Positions.Length != StepCount ({n})");
+
             Common.Log($"Plotting {output.GetUniqueName()} started!");
 
             ScottPlot.Plot plt = new();
 
             plt.Add.Scatter(output.TimeSteps, output.Velocities);
-            plt.Title("Time .vs Velocity Diagram");
+            plt.Title("Time vs. Velocity Diagram");
             plt.XLabel("Time Steps");
             plt.YLabel("Velocities");
 
@@ -61,7 +75,7 @@ public static class CH01FF03
 
             plt = new();
             plt.Add.Scatter(output.TimeSteps, output.Positions);
-            plt.Title("Time .vs Position Diagram");
+            plt.Title("Time vs. Position Diagram");
             plt.XLabel("Time Steps");
             plt.YLabel("Positions");
 
@@ -74,12 +88,18 @@ public static class CH01FF03
         }
 
         await Common.BatchOperate(
-            outputs.Where(output => output is { }).Cast<FFOutput>().ToArray(),
+            outputs.Where(output => output is not null).Cast<FFOutput>().ToArray(),
             Plotter);
     }
 
     public static FFOutput Simulate(FFInput input)
     {
+        Debug.Assert(input is not null, "Input is null.");
+        Debug.Assert(input.StepCount >= 0, "StepCount must be non-negative.");
+        Debug.Assert(input.TimeStep > 0, "TimeStep must be positive.");
+        Debug.Assert(input.Mass > 0, "Mass must be positive.");
+        Debug.Assert(input.Gravity >= 0, "Gravity must be non-negative.");
+
         Common.Log($"{input.GetUniqueName()} processing started!");
 
         double[] TimeSteps = new double[input.StepCount];
