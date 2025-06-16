@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
-using AITCSM.NET.Base;
+using AITCSM.NET.Abstractions.Entity;
 
-namespace AITCSM.NET.Implementations;
+namespace AITCSM.NET.Implementations.Simulation.CH01;
 
-public static class CH01FF03
+public static class FreeFall
 {
     public record FFInput(
         int Id,

@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
-using AITCSM.NET.Base;
+using AITCSM.NET.Abstractions.Entity;
 
-namespace AITCSM.NET.Implementations;
+namespace AITCSM.NET.Implementations.Simulation.CH01;
 
-public static class CH01DOM01
+public static class DistributionOfMoney
 {
     public record DOMInput(int Id, int NumberOfAgents, double InitialMoney, int NumberOfIterations) : Identifyable(Id);
     public record DOMOutput(int Id, DOMInput Input, double[] Agents) : Identifyable(Id);

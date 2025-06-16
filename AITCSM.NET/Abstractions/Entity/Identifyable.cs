@@ -1,4 +1,4 @@
-namespace AITCSM.NET.Base;
+namespace AITCSM.NET.Abstractions.Entity;
 
 public record Identifyable(int Id)
 {

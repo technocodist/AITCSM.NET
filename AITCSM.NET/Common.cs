@@ -1,6 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using AITCSM.NET.Base;
+using AITCSM.NET.Abstractions.Entity;
 
 namespace AITCSM.NET;
 
