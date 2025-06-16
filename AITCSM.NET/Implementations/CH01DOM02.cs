@@ -24,7 +24,7 @@ public static class CH01DOM02
 
         Debug.Assert(domSavingInputs is not null && domSavingInputs.Length > 0, "Input array must not be null or empty.");
 
-        IEnumerable<DOMSavingOutput> domSavingOutputs = await Common.BatchSimulate(domSavingInputs, Simulate);
+        IEnumerable<DOMSavingOutput> domSavingOutputs = await Common.BatchOperate(domSavingInputs, Simulate);
         Debug.Assert(domSavingOutputs is not null, "BatchSimulate returned null.");
 
         await Common.WriteToJson(domSavingOutputs);
