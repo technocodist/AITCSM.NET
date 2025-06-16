@@ -50,12 +50,20 @@ public static class Common
         await Task.WhenAll(tasks);
     }
 
-    public static async Task<TOut[]> BatchSimulate<TIn, TOut>(TIn[] inputs, Func<TIn, TOut> simulator)
+    public static async Task<TOut[]> BatchOperate<TIn, TOut>(TIn[] inputs, Func<TIn, TOut> @operator)
     {
         Task<TOut>[] simulations = [.. inputs.Select(
-            input =>  Task.Run(() => simulator(input)))];
+            input =>  Task.Run(() => @operator(input)))];
 
         return await Task.WhenAll(simulations);
+    }
+
+    public static async Task BatchOperate<TIn>(TIn[] inputs, Action<TIn> @operator)
+    {
+        Task[] simulations = [.. inputs.Select(
+            input =>  Task.Run(() => @operator(input)))];
+
+        await Task.WhenAll(simulations);
     }
 
     public static void Log(string format, params object?[]? objects)
