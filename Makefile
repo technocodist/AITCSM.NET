@@ -5,3 +5,6 @@ build: AITCSM.NET
 
 run: AITCSM.NET
 	dotnet run --project .\AITCSM.NET\AITCSM.NET.csproj
+
+clean:
+	rm -rf Results
