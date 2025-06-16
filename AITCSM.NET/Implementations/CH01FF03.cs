@@ -3,7 +3,7 @@ using ScottPlot.Plottables;
 
 namespace AITCSM.NET.Implementations;
 
-public static class CH01DOM03
+public static class CH01FF03
 {
     public record FFInput(
         int Id,
