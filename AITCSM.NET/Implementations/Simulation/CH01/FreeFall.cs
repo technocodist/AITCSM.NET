@@ -109,8 +109,8 @@ public static class FreeFall
         double time = 0.0;
         double velocity = input.InitialVelocity;
         double position = input.InitialHeight;
-        double gravityForce = input.Mass * input.Gravity;
-        double acceleration = -gravityForce / input.Mass;
+        double gravityForce = -input.Mass * input.Gravity;
+        double acceleration = gravityForce / input.Mass;
 
         for (int step = 0; step < input.StepCount; step++)
         {

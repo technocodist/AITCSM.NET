@@ -1,4 +1,6 @@
-﻿using AITCSM.NET.Implementations.Simulation.CH01;
+﻿using AITCSM.NET.Implementations.Visualization;
 
-await FreeFall.DefaultSimulate();
-await FreeFall.DefaultPlot();
+// await FreeFall.DefaultSimulate();
+// await FreeFall.DefaultPlot();
+
+BouncingParticleSimulation.Run();
