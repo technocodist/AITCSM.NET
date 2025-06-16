@@ -54,10 +54,10 @@ public static class CH01FF03
             plt.XLabel("Time Steps");
             plt.YLabel("Velocities");
 
-            plt.SaveSvg(
-                Path.Combine(Common.OutputDir, $"{output.GetUniqueName()}-time-velocity.svg"),
-                width: 1920,
-                height: 1080);
+            plt.SavePng(
+                Path.Combine(Common.OutputDir, $"{output.GetUniqueName()}-time-velocity.png"),
+                width: 1280,
+                height: 820);
 
             plt = new();
             plt.Add.Scatter(output.TimeSteps, output.Positions);
@@ -65,8 +65,8 @@ public static class CH01FF03
             plt.XLabel("Time Steps");
             plt.YLabel("Positions");
 
-            plt.SaveSvg(
-                Path.Combine(Common.OutputDir, $"{output.GetUniqueName()}-time-position.svg"),
+            plt.SavePng(
+                Path.Combine(Common.OutputDir, $"{output.GetUniqueName()}-time-position.png"),
                 width: 1920,
                 height: 1080);
 

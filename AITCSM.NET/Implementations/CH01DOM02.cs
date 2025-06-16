@@ -47,8 +47,8 @@ public static class CH01DOM02
             ScottPlot.Plot plt = new();
             plt.Add.Scatter([.. Enumerable.Range(0, output.Input.NumberOfAgents).Select(x => (double)x)], output.Agents);
 
-            plt.SaveSvg(
-                Path.Combine(Common.OutputDir, $"{output.GetUniqueName()}.svg"),
+            plt.SavePng(
+                Path.Combine(Common.OutputDir, $"{output.GetUniqueName()}.png"),
                 width: 1920,
                 height: 1080);
 
