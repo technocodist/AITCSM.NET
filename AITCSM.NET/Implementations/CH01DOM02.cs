@@ -30,18 +30,13 @@ public static class CH01DOM02
         await Common.WriteToJson(domSavingOutputs);
     }
 
-    public static void DefaultPlot()
+    public static async Task DefaultPlot()
     {
-        DOMSavingOutput?[] domOutputs = Common.ReadToObject<DOMSavingOutput>(typeof(DOMSavingOutput).FullName!);
-        Debug.Assert(domOutputs is not null, "ReadToObject returned null.");
+        DOMSavingOutput?[] outputs = Common.ReadToObject<DOMSavingOutput>(typeof(DOMSavingOutput).FullName!);
+        Debug.Assert(outputs is not null, "ReadToObject returned null.");
 
-        foreach (DOMSavingOutput? output in domOutputs)
+        static void Plotter(DOMSavingOutput output)
         {
-            if (output == null)
-            {
-                continue;
-            }
-
             Debug.Assert(output.Input is not null, "Output.Input must not be null.");
             Debug.Assert(output.Agents is not null, "Output.Agents must not be null.");
             Debug.Assert(output.Agents.Length == output.Input.NumberOfAgents,
@@ -59,6 +54,10 @@ public static class CH01DOM02
 
             Common.Log($"Plotting {output.GetUniqueName()} finished!");
         }
+
+        await Common.BatchOperate(
+            outputs.Where(output => output is { }).Cast<DOMSavingOutput>().ToArray(),
+            Plotter);
     }
 
     public static DOMSavingOutput Simulate(DOMSavingInput input)
