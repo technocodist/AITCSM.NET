@@ -13,7 +13,7 @@ public static class FreeFall
         double InitialHeight,
         double Mass,
         double Gravity) : Identifyable(Id);
-        
+
     public record FFOutput(
         int Id,
         FFInput Input,

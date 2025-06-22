@@ -8,7 +8,7 @@ public class PrimitiveRenderer2D
     private readonly int _vao;
     private readonly int _vbo;
     private readonly int _shader;
-    private readonly List<float> _vertexBuffer = new();
+    private readonly List<float> _vertexBuffer = [];
 
     private readonly int _positionLocation = 0;
     private readonly int _colorLocation = 1;

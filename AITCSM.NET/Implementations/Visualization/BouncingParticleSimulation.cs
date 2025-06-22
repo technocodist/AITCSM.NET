@@ -12,7 +12,7 @@ public class BouncingParticleSimulation(GameWindow window) : VisualizationBase(w
     private const float Gravity = -9.8f;
     private const float Radius = 0.05f;
 
-    private PrimitiveRenderer2D _renderer;
+    private PrimitiveRenderer2D _renderer = null!;
 
     public override void OnLoad()
     {
@@ -45,7 +45,7 @@ public class BouncingParticleSimulation(GameWindow window) : VisualizationBase(w
 
     public override void OnResize(ResizeEventArgs e)
     {
-        GL.Viewport(0, 0, e.Width, e.Height);
+        GL.Viewport(0, 0, int.Max(e.Width, e.Height), int.Max(e.Width, e.Height));
     }
 
     public static void Run()
@@ -57,7 +57,7 @@ public class BouncingParticleSimulation(GameWindow window) : VisualizationBase(w
 
         var nws = new NativeWindowSettings()
         {
-            ClientSize = new OpenTK.Mathematics.Vector2i(800, 600),
+            ClientSize = new OpenTK.Mathematics.Vector2i(800, y: 800),
             Title = "Physics Visualization"
         };
 

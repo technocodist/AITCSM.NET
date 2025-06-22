@@ -1,6 +1,7 @@
-﻿using AITCSM.NET.Implementations.Visualization;
+﻿using AITCSM.NET.Implementations.Simulation.CH01;
+using AITCSM.NET.Implementations.Visualization;
 
-// await FreeFall.DefaultSimulate();
-// await FreeFall.DefaultPlot();
+ await FreeFallWithAirResistance.DefaultSimulate();
+ await FreeFallWithAirResistance.DefaultPlot();
 
-BouncingParticleSimulation.Run();
+//BouncingParticleSimulation.Run();
