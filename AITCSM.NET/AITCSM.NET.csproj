@@ -8,12 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="OpenTK" Version="4.9.4" />
+    <PackageReference Include="ppy.SDL3-CS" Version="2025.625.0" />
     <PackageReference Include="ScottPlot" Version="5.0.55" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Abstractions\Simulation\" />
-  </ItemGroup>
-
 </Project>
