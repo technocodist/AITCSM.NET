@@ -1,62 +1,49 @@
 ﻿using System.Diagnostics;
+using AITCSM.NET.Abstractions;
 using AITCSM.NET.Abstractions.Entity;
 
 namespace AITCSM.NET.Implementations.Simulation.CH01;
 
-public static class DistributionOfMoney
-{
-    public record DOMInput(int Id, int NumberOfAgents, double InitialMoney, int NumberOfIterations) : Identifyable(Id);
-    public record DOMOutput(int Id, DOMInput Input, double[] Agents) : Identifyable(Id);
+public record DOMInput(int Id, int NumberOfAgents, double InitialMoney, int NumberOfIterations) : Identifyable(Id);
+public record DOMOutput(int Id, DOMInput Input, double[] Agents) : Identifyable(Id);
 
+public class DistributionOfMoney : ISimulation<DOMInput, DOMOutput>, IPlotable<DOMOutput>
+{
     private static DOMInput[] domInputs { get; } = [
         new DOMInput(Id: 1, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 100_000),
         new DOMInput(Id: 2, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 200_000),
         new DOMInput(Id: 3, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 400_000)
     ];
 
-    public static async Task DefaultSimulate()
-    {
-        Debug.Assert(domInputs is not null && domInputs.Length > 0, "domInputs must not be null or empty.");
+    public static readonly Lazy<DistributionOfMoney> Instance = new(() => new DistributionOfMoney());
 
-        IEnumerable<DOMOutput> domOutputs = await Common.BatchOperate(domInputs, Simulate);
-        Debug.Assert(domOutputs is not null, "BatchSimulate returned null.");
-        await Common.WriteToJson(domOutputs);
+    public Task Plot(DOMOutput output, PlottingOptions options)
+    {
+        Debug.Assert(output.Input is not null, "DOMOutput.Input must not be null.");
+        Debug.Assert(output.Agents is not null, "Agents array must not be null.");
+        Debug.Assert(output.Agents.Length == output.Input.NumberOfAgents,
+            $"Agents array length ({output.Agents.Length}) must match NumberOfAgents ({output.Input.NumberOfAgents}).");
+
+        Common.Log($"Plotting {output.GetUniqueName()} started!");
+
+        ScottPlot.Plot plt = new();
+        plt.Add.Scatter(
+            [.. Enumerable.Range(0, output.Input.NumberOfAgents).Select(x => (double)x)],
+            output.Agents);
+
+        plt.Save(
+            filePath: Path.Combine(
+                options.OutputDirectory,
+                $"{output.GetUniqueName()}.{options.Format.ToString().ToLower()}"),
+            format: options.Format,
+            width: options.Width,
+            height: options.Height);
+
+        Common.Log($"Plotting {output.GetUniqueName()} finished!");
+        return Task.CompletedTask;
     }
 
-    public static async Task DefaultPlot()
-    {
-        DOMOutput?[] outputs = Common.ReadToObject<DOMOutput>(typeof(DOMOutput).FullName!);
-
-        Debug.Assert(outputs is not null, "ReadToObject returned null.");
-
-        static void Plotter(DOMOutput output)
-        {
-            Debug.Assert(output.Input is not null, "DOMOutput.Input must not be null.");
-            Debug.Assert(output.Agents is not null, "Agents array must not be null.");
-            Debug.Assert(output.Agents.Length == output.Input.NumberOfAgents,
-                $"Agents array length ({output.Agents.Length}) must match NumberOfAgents ({output.Input.NumberOfAgents}).");
-
-            Common.Log($"Plotting {output.GetUniqueName()} started!");
-
-            ScottPlot.Plot plt = new();
-            plt.Add.Scatter(
-                [.. Enumerable.Range(0, output.Input.NumberOfAgents).Select(x => (double)x)],
-                output.Agents);
-
-            plt.SavePng(
-                Path.Combine(Common.OutputDir, $"{output.GetUniqueName()}.png"),
-                width: 1920,
-                height: 1080);
-
-            Common.Log($"Plotting {output.GetUniqueName()} finished!");
-        }
-
-        await Common.BatchOperate(
-            outputs.Where(output => output is { }).Cast<DOMOutput>().ToArray(),
-            Plotter);
-    }
-
-    public static DOMOutput Simulate(DOMInput input)
+    public Task<DOMOutput> Simulate(DOMInput input)
     {
         Debug.Assert(input is not null, "Input must not be null.");
         Debug.Assert(input.NumberOfAgents > 1, "NumberOfAgents must be greater than 1.");
@@ -93,6 +80,25 @@ public static class DistributionOfMoney
         }
 
         Common.Log($"{input.GetUniqueName()} processing finished!");
-        return new DOMOutput(input.Id, input, agents);
+        return Task.FromResult(new DOMOutput(input.Id, input, agents));
+    }
+
+    public static async Task DefaultSimulate()
+    {
+        Debug.Assert(domInputs is not null && domInputs.Length > 0, "domInputs must not be null or empty.");
+
+        IEnumerable<DOMOutput> domOutputs = await Common.BatchOperate(domInputs, Instance.Value.Simulate);
+        Debug.Assert(domOutputs is not null, "BatchSimulate returned null.");
+        await Common.WriteToJson(domOutputs);
+    }
+
+    public static async Task DefaultPlot()
+    {
+        DOMOutput?[] outputs = Common.ReadToObject<DOMOutput>(typeof(DOMOutput).FullName!);
+        Debug.Assert(outputs is not null, "ReadToObject returned null.");
+
+        await Common.BatchOperate(
+            outputs.Where(output => output is { }).Cast<DOMOutput>().ToArray(),
+            output => Instance.Value.Plot(output, Common.PlottingOptions));
     }
 }

@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using AITCSM.NET.Abstractions;
 using AITCSM.NET.Abstractions.Entity;
+using ScottPlot;
 
 namespace AITCSM.NET;
 
@@ -13,6 +15,13 @@ public static class Common
     };
 
     public static string OutputDir { get; } = "./Results";
+
+    public static PlottingOptions PlottingOptions { get; } = new(
+        OutputDirectory: OutputDir,
+        Format: ImageFormat.Png,
+        Width: 720,
+        Height: 480
+    );
 
     public static TOut?[] ReadToObject<TOut>(string name)
     where TOut : class
@@ -53,6 +62,13 @@ public static class Common
     {
         Task<TOut>[] simulations = [.. inputs.Select(
             input =>  Task.Run(() => @operator(input)))];
+
+        return await Task.WhenAll(simulations);
+    }
+
+     public static async Task<TOut[]> BatchOperate<TIn, TOut>(TIn[] inputs, Func<TIn, Task<TOut>> @operator)
+    {
+        Task<TOut>[] simulations = [.. inputs.Select(input =>  @operator(input))];
 
         return await Task.WhenAll(simulations);
     }

@@ -1,6 +1,5 @@
 ﻿using AITCSM.NET.Abstractions.Entity;
 using System.Diagnostics;
-using static AITCSM.NET.Implementations.Simulation.CH01.FreeFall;
 
 namespace AITCSM.NET.Implementations.Simulation.CH01;
 
