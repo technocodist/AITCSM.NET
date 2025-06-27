@@ -1,66 +1,29 @@
 ﻿using System.Diagnostics;
+using AITCSM.NET.Abstractions;
 using AITCSM.NET.Abstractions.Entity;
 
 namespace AITCSM.NET.Implementations.Simulation.CH01;
 
-public static class DistributionOfMoneyWithSaving
+public record DOMSavingInput(int Id, int NumberOfAgents, double InitialMoney, int NumberOfIterations, double Lambda) : Identifyable(Id);
+public record DOMSavingOutput(int Id, DOMSavingInput Input, double[] Agents) : Identifyable(Id);
+
+public class DistributionOfMoneyWithSaving : ISimulation<DOMSavingInput, DOMSavingOutput>, IPlotable<DOMSavingOutput>
 {
-    public record DOMSavingInput(int Id, int NumberOfAgents, double InitialMoney, int NumberOfIterations, double Lambda) : Identifyable(Id);
-    public record DOMSavingOutput(int Id, DOMSavingInput Input, double[] Agents) : Identifyable(Id);
+    private static DOMSavingInput[] domSavingInputs { get; } = [
+        new DOMSavingInput(Id: 1, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 100_000, Lambda: 0.1),
+        new DOMSavingInput(Id: 2, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 100_000, Lambda: 0.2),
+        new DOMSavingInput(Id: 3, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 100_000, Lambda: 0.3),
+        new DOMSavingInput(Id: 4, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 200_000, Lambda: 0.1),
+        new DOMSavingInput(Id: 5, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 200_000, Lambda: 0.2),
+        new DOMSavingInput(Id: 6, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 200_000, Lambda: 0.3),
+        new DOMSavingInput(Id: 7, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 400_000, Lambda: 0.1),
+        new DOMSavingInput(Id: 8, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 400_000, Lambda: 0.2),
+        new DOMSavingInput(Id: 9, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 400_000, Lambda: 0.3)
+    ];
 
-    public static async Task DefaultSimulate()
-    {
-        DOMSavingInput[] domSavingInputs = [
-            new DOMSavingInput(Id: 1, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 100_000, Lambda: 0.1),
-            new DOMSavingInput(Id: 2, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 100_000, Lambda: 0.2),
-            new DOMSavingInput(Id: 3, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 100_000, Lambda: 0.3),
-            new DOMSavingInput(Id: 4, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 200_000, Lambda: 0.1),
-            new DOMSavingInput(Id: 5, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 200_000, Lambda: 0.2),
-            new DOMSavingInput(Id: 6, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 200_000, Lambda: 0.3),
-            new DOMSavingInput(Id: 7, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 400_000, Lambda: 0.1),
-            new DOMSavingInput(Id: 8, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 400_000, Lambda: 0.2),
-            new DOMSavingInput(Id: 9, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 400_000, Lambda: 0.3)
-        ];
+    public static readonly Lazy<DistributionOfMoneyWithSaving> Instance = new(() => new DistributionOfMoneyWithSaving());
 
-        Debug.Assert(domSavingInputs is not null && domSavingInputs.Length > 0, "Input array must not be null or empty.");
-
-        IEnumerable<DOMSavingOutput> domSavingOutputs = await Common.BatchOperate(domSavingInputs, Simulate);
-        Debug.Assert(domSavingOutputs is not null, "BatchSimulate returned null.");
-
-        await Common.WriteToJson(domSavingOutputs);
-    }
-
-    public static async Task DefaultPlot()
-    {
-        DOMSavingOutput?[] outputs = Common.ReadToObject<DOMSavingOutput>(typeof(DOMSavingOutput).FullName!);
-        Debug.Assert(outputs is not null, "ReadToObject returned null.");
-
-        static void Plotter(DOMSavingOutput output)
-        {
-            Debug.Assert(output.Input is not null, "Output.Input must not be null.");
-            Debug.Assert(output.Agents is not null, "Output.Agents must not be null.");
-            Debug.Assert(output.Agents.Length == output.Input.NumberOfAgents,
-                $"Agents array length ({output.Agents.Length}) must match NumberOfAgents ({output.Input.NumberOfAgents}).");
-
-            Common.Log($"Plotting {output.GetUniqueName()} started!");
-
-            ScottPlot.Plot plt = new();
-            plt.Add.Scatter([.. Enumerable.Range(0, output.Input.NumberOfAgents).Select(x => (double)x)], output.Agents);
-
-            plt.SavePng(
-                Path.Combine(Common.OutputDir, $"{output.GetUniqueName()}.png"),
-                width: 1920,
-                height: 1080);
-
-            Common.Log($"Plotting {output.GetUniqueName()} finished!");
-        }
-
-        await Common.BatchOperate(
-            outputs.Where(output => output is { }).Cast<DOMSavingOutput>().ToArray(),
-            Plotter);
-    }
-
-    public static DOMSavingOutput Simulate(DOMSavingInput input)
+    public Task<DOMSavingOutput> Simulate(DOMSavingInput input)
     {
         Debug.Assert(input is not null, "Input must not be null.");
         Debug.Assert(input.NumberOfAgents > 1, "NumberOfAgents must be greater than 1.");
@@ -96,6 +59,52 @@ public static class DistributionOfMoneyWithSaving
         }
 
         Common.Log($"{input.GetUniqueName()} processing finished!");
-        return new(input.Id, input, agents);
+        return Task.FromResult(new DOMSavingOutput(input.Id, input, agents));
+    }
+
+    public Task Plot(DOMSavingOutput output, PlottingOptions options)
+    {
+        Debug.Assert(output.Input is not null, "Output.Input must not be null.");
+        Debug.Assert(output.Agents is not null, "Output.Agents must not be null.");
+        Debug.Assert(output.Agents.Length == output.Input.NumberOfAgents,
+            $"Agents array length ({output.Agents.Length}) must match NumberOfAgents ({output.Input.NumberOfAgents}).");
+
+        Common.Log($"Plotting {output.GetUniqueName()} started!");
+
+        ScottPlot.Plot plt = new();
+        plt.Add.Scatter([
+            .. Enumerable.Range(0, output.Input.NumberOfAgents).Select(x => (double)x)
+        ], output.Agents);
+
+        plt.Save(
+            filePath: Path.Combine(
+                options.OutputDirectory,
+                $"{output.GetUniqueName()}.{options.Format.ToString().ToLower()}"),
+            format: options.Format,
+            width: options.Width,
+            height: options.Height);
+
+        Common.Log($"Plotting {output.GetUniqueName()} finished!");
+        return Task.CompletedTask;
+    }
+
+    public static async Task DefaultSimulate()
+    {
+        Debug.Assert(domSavingInputs is not null && domSavingInputs.Length > 0, "Input array must not be null or empty.");
+
+        IEnumerable<DOMSavingOutput> domSavingOutputs = await Common.BatchOperate(domSavingInputs, Instance.Value.Simulate);
+        Debug.Assert(domSavingOutputs is not null, "BatchSimulate returned null.");
+
+        await Common.WriteToJson(domSavingOutputs);
+    }
+
+    public static async Task DefaultPlot()
+    {
+        DOMSavingOutput?[] outputs = Common.ReadToObject<DOMSavingOutput>(typeof(DOMSavingOutput).FullName!);
+        Debug.Assert(outputs is not null, "ReadToObject returned null.");
+
+        await Common.BatchOperate(
+            outputs.Where(output => output is { }).Cast<DOMSavingOutput>().ToArray(),
+            output => Instance.Value.Plot(output, Common.PlottingOptions));
     }
 }

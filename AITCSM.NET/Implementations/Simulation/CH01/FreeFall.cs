@@ -1,27 +1,28 @@
 ﻿using System.Diagnostics;
+using AITCSM.NET.Abstractions;
 using AITCSM.NET.Abstractions.Entity;
 
 namespace AITCSM.NET.Implementations.Simulation.CH01;
 
-public static class FreeFall
+public record FFInput(
+    int Id,
+    double TimeStep,
+    int StepCount,
+    double InitialVelocity,
+    double InitialHeight,
+    double Mass,
+    double Gravity) : Identifyable(Id);
+
+public record FFOutput(
+    int Id,
+    FFInput Input,
+    double[] TimeSteps,
+    double[] Velocities,
+    double[] Positions) : Identifyable(Id);
+
+public class FreeFall : ISimulation<FFInput, FFOutput>, IPlotable<FFOutput>
 {
-    public record FFInput(
-        int Id,
-        double TimeStep,
-        int StepCount,
-        double InitialVelocity,
-        double InitialHeight,
-        double Mass,
-        double Gravity) : Identifyable(Id);
-
-    public record FFOutput(
-        int Id,
-        FFInput Input,
-        double[] TimeSteps,
-        double[] Velocities,
-        double[] Positions) : Identifyable(Id);
-
-    public static FFInput[] Inputs { get; } = [
+    public static readonly FFInput[] Inputs  = [
         new FFInput(Id: 1, TimeStep: 0.01, StepCount: 1000, InitialVelocity: 10, InitialHeight: 0, Mass: 1, Gravity: 9.81),
         new FFInput(Id: 2, TimeStep: 0.1, StepCount: 100, InitialVelocity: 0, InitialHeight: 100, Mass: 2, Gravity: 9.81),
         new FFInput(Id: 3, TimeStep: 1.0, StepCount: 10, InitialVelocity: -5, InitialHeight: 50, Mass: 5, Gravity: 9.81),
@@ -34,65 +35,9 @@ public static class FreeFall
         new FFInput(Id: 10, TimeStep: 0.1, StepCount: 100, InitialVelocity: 0, InitialHeight: 0, Mass: 1, Gravity: 0),
     ];
 
-    public static async Task DefaultSimulate()
-    {
-        Debug.Assert(Inputs is not null && Inputs.Length > 0, "Simulation input list is empty or null.");
-        IEnumerable<FFOutput> outputs = await Common.BatchOperate(Inputs, Simulate);
-        Debug.Assert(outputs is not null, "BatchOperate returned null.");
-        await Common.WriteToJson(outputs);
-    }
+    public static readonly Lazy<FreeFall> Instance = new(() => new FreeFall());
 
-    public static async Task DefaultPlot()
-    {
-        FFOutput?[] outputs = Common.ReadToObject<FFOutput>(typeof(FFOutput).FullName!);
-        Debug.Assert(outputs is not null, "ReadToObject returned null.");
-
-        static void Plotter(FFOutput output)
-        {
-            Debug.Assert(output is not null, "Output is null.");
-            Debug.Assert(output.TimeSteps is not null, "TimeSteps array is null.");
-            Debug.Assert(output.Velocities is not null, "Velocities array is null.");
-            Debug.Assert(output.Positions is not null, "Positions array is null.");
-
-            int n = output.Input.StepCount;
-            Debug.Assert(output.TimeSteps.Length == n, $"TimeSteps.Length != StepCount ({n})");
-            Debug.Assert(output.Velocities.Length == n, $"Velocities.Length != StepCount ({n})");
-            Debug.Assert(output.Positions.Length == n, $"Positions.Length != StepCount ({n})");
-
-            Common.Log($"Plotting {output.GetUniqueName()} started!");
-
-            ScottPlot.Plot plt = new();
-
-            plt.Add.Scatter(output.TimeSteps, output.Velocities);
-            plt.Title("Time vs. Velocity Diagram");
-            plt.XLabel("Time Steps");
-            plt.YLabel("Velocities");
-
-            plt.SavePng(
-                Path.Combine(Common.OutputDir, $"{output.GetUniqueName()}-time-velocity.png"),
-                width: 1280,
-                height: 820);
-
-            plt = new();
-            plt.Add.Scatter(output.TimeSteps, output.Positions);
-            plt.Title("Time vs. Position Diagram");
-            plt.XLabel("Time Steps");
-            plt.YLabel("Positions");
-
-            plt.SavePng(
-                Path.Combine(Common.OutputDir, $"{output.GetUniqueName()}-time-position.png"),
-                width: 1920,
-                height: 1080);
-
-            Common.Log($"Plotting {output.GetUniqueName()} finished!");
-        }
-
-        await Common.BatchOperate(
-            outputs.Where(output => output is not null).Cast<FFOutput>().ToArray(),
-            Plotter);
-    }
-
-    public static FFOutput Simulate(FFInput input)
+    public Task<FFOutput> Simulate(FFInput input)
     {
         Debug.Assert(input is not null, "Input is null.");
         Debug.Assert(input.StepCount >= 0, "StepCount must be non-negative.");
@@ -125,11 +70,76 @@ public static class FreeFall
 
         Common.Log($"{input.GetUniqueName()} processing finished!");
 
-        return new FFOutput(
+        return Task.FromResult(new FFOutput(
             Id: input.Id,
             Input: input,
             TimeSteps: TimeSteps,
             Velocities: Velocities,
-            Positions: Positions);
+            Positions: Positions));
+    }
+
+    public Task Plot(FFOutput output, PlottingOptions options)
+    {
+        Debug.Assert(output is not null, "Output is null.");
+        Debug.Assert(output.TimeSteps is not null, "TimeSteps array is null.");
+        Debug.Assert(output.Velocities is not null, "Velocities array is null.");
+        Debug.Assert(output.Positions is not null, "Positions array is null.");
+
+        int n = output.Input.StepCount;
+        Debug.Assert(output.TimeSteps.Length == n, $"TimeSteps.Length != StepCount ({n})");
+        Debug.Assert(output.Velocities.Length == n, $"Velocities.Length != StepCount ({n})");
+        Debug.Assert(output.Positions.Length == n, $"Positions.Length != StepCount ({n})");
+
+        Common.Log($"Plotting {output.GetUniqueName()} started!");
+
+        ScottPlot.Plot plt = new();
+
+        plt.Add.Scatter(output.TimeSteps, output.Velocities);
+        plt.Title("Time vs. Velocity Diagram");
+        plt.XLabel("Time Steps");
+        plt.YLabel("Velocities");
+
+        plt.Save(
+            filePath: Path.Combine(
+                options.OutputDirectory,
+                $"{output.GetUniqueName()}-time-velocity.{options.Format.ToString().ToLower()}"),
+            format: options.Format,
+            width: options.Width,
+            height: options.Height);
+
+        plt = new();
+        plt.Add.Scatter(output.TimeSteps, output.Positions);
+        plt.Title("Time vs. Position Diagram");
+        plt.XLabel("Time Steps");
+        plt.YLabel("Positions");
+
+        plt.Save(
+            filePath: Path.Combine(
+                options.OutputDirectory,
+                $"{output.GetUniqueName()}-time-position.{options.Format.ToString().ToLower()}"),
+            format: options.Format,
+            width: options.Width,
+            height: options.Height);
+
+        Common.Log($"Plotting {output.GetUniqueName()} finished!");
+        return Task.CompletedTask;
+    }
+
+    public static async Task DefaultSimulate()
+    {
+        Debug.Assert(Inputs is not null && Inputs.Length > 0, "Simulation input list is empty or null.");
+        IEnumerable<FFOutput> outputs = await Common.BatchOperate(Inputs, Instance.Value.Simulate);
+        Debug.Assert(outputs is not null, "BatchOperate returned null.");
+        await Common.WriteToJson(outputs);
+    }
+
+    public static async Task DefaultPlot()
+    {
+        FFOutput?[] outputs = Common.ReadToObject<FFOutput>(typeof(FFOutput).FullName!);
+        Debug.Assert(outputs is not null, "ReadToObject returned null.");
+
+        await Common.BatchOperate(
+            outputs.Where(output => output is not null).Cast<FFOutput>().ToArray(),
+            output => Instance.Value.Plot(output, Common.PlottingOptions));
     }
 }

@@ -1,30 +1,31 @@
-﻿using AITCSM.NET.Abstractions.Entity;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using AITCSM.NET.Abstractions;
+using AITCSM.NET.Abstractions.Entity;
 
 namespace AITCSM.NET.Implementations.Simulation.CH01;
 
-public static class FreeFallWithAirResistance
+public record FFWARInput(
+    int Id,
+    double TimeStep,
+    int StepCount,
+    double VelocityEffectivePower,
+    double InitialVelocity,
+    double InitialHeight,
+    double Mass,
+    double Gravity,
+    double DragCoeffecient) : Identifyable(Id);
+
+public record FFWAROutput(
+    int Id,
+    FFWARInput Input,
+    double[] TimeSteps,
+    double[] Velocities,
+    double[] Positions,
+    double[] DragForces,
+    double[] NetForces) : Identifyable(Id);
+
+public class FreeFallWithAirResistance : ISimulation<FFWARInput, FFWAROutput>, IPlotable<FFWAROutput>
 {
-    public record FFWARInput(
-        int Id,
-        double TimeStep,
-        int StepCount,
-        double VelocityEffectivePower,
-        double InitialVelocity,
-        double InitialHeight,
-        double Mass,
-        double Gravity,
-        double DragCoeffecient) : Identifyable(Id);
-
-    public record FFWAROutput(
-        int Id,
-        FFWARInput Input,
-        double[] TimeSteps,
-        double[] Velocities,
-        double[] Positions,
-        double[] DragForces,
-        double[] NetForces) : Identifyable(Id);
-
     public static FFWARInput[] Inputs { get; } = [
         new FFWARInput(Id: 1, TimeStep: 00.01, VelocityEffectivePower: 1,  StepCount: 100000,     InitialVelocity: 10, InitialHeight: 0, Mass: 1, Gravity: 9.81,  DragCoeffecient: 0.5),
         new FFWARInput(Id: 2, TimeStep: 000.1, VelocityEffectivePower: 2,  StepCount: 100000,  InitialVelocity: 0, InitialHeight: 100, Mass: 2, Gravity: 9.81,     DragCoeffecient: 0.9),
@@ -38,87 +39,9 @@ public static class FreeFallWithAirResistance
         new FFWARInput(Id: 10, TimeStep: 000.1, VelocityEffectivePower: 2,  StepCount: 100000,     InitialVelocity: 0, InitialHeight: 0, Mass: 1, Gravity: 0,          DragCoeffecient: 0.25),
     ];
 
-    public static async Task DefaultSimulate()
-    {
-        Debug.Assert(Inputs is not null && Inputs.Length > 0, "Simulation input list is empty or null.");
-        IEnumerable<FFWAROutput> outputs = await Common.BatchOperate(Inputs, Simulate);
-        Debug.Assert(outputs is not null, "BatchOperate returned null.");
-        await Common.WriteToJson(outputs);
-    }
+    public static readonly Lazy<FreeFallWithAirResistance> Instance = new(() => new FreeFallWithAirResistance());
 
-    public static async Task DefaultPlot()
-    {
-        FFWAROutput?[] outputs = Common.ReadToObject<FFWAROutput>(typeof(FFWAROutput).FullName!);
-        Debug.Assert(outputs is not null, "ReadToObject returned null.");
-
-        static void Plotter(FFWAROutput output)
-        {
-            Debug.Assert(output is not null, "Output is null.");
-            Debug.Assert(output.TimeSteps is not null, "TimeSteps array is null.");
-            Debug.Assert(output.Velocities is not null, "Velocities array is null.");
-            Debug.Assert(output.Positions is not null, "Positions array is null.");
-
-            int n = output.Input.StepCount;
-            Debug.Assert(output.TimeSteps.Length == n, $"TimeSteps.Length != StepCount ({n})");
-            Debug.Assert(output.Velocities.Length == n, $"Velocities.Length != StepCount ({n})");
-            Debug.Assert(output.Positions.Length == n, $"Positions.Length != StepCount ({n})");
-
-            Common.Log($"Plotting {output.GetUniqueName()} started!");
-
-            ScottPlot.Plot plt = new();
-
-            plt.Add.Scatter(output.TimeSteps, output.Velocities);
-            plt.Title("Time vs. Velocity Diagram");
-            plt.XLabel("Time Steps");
-            plt.YLabel("Velocities");
-
-            plt.SavePng(
-                Path.Combine(Common.OutputDir, $"{output.GetUniqueName()}-time-velocity.png"),
-                width: 1280,
-                height: 820);
-
-            plt = new();
-            plt.Add.Scatter(output.TimeSteps, output.Positions);
-            plt.Title("Time vs. Position Diagram");
-            plt.XLabel("Time Steps");
-            plt.YLabel("Positions");
-
-            plt.SavePng(
-                Path.Combine(Common.OutputDir, $"{output.GetUniqueName()}-time-position.png"),
-                width: 1920,
-                height: 1080);
-
-            plt = new();
-            plt.Add.Scatter(output.TimeSteps, output.NetForces);
-            plt.Title("Time vs. Net Forces Diagram");
-            plt.XLabel("Time Steps");
-            plt.YLabel("Net Forces");
-
-            plt.SavePng(
-                Path.Combine(Common.OutputDir, $"{output.GetUniqueName()}-time-netforce.png"),
-                width: 1920,
-                height: 1080);
-
-            plt = new();
-            plt.Add.Scatter(output.TimeSteps, output.DragForces);
-            plt.Title("Time vs. Drag Forces Diagram");
-            plt.XLabel("Time Steps");
-            plt.YLabel("Drag Forces");
-
-            plt.SavePng(
-                Path.Combine(Common.OutputDir, $"{output.GetUniqueName()}-time-dragforce.png"),
-                width: 1920,
-                height: 1080);
-
-            Common.Log($"Plotting {output.GetUniqueName()} finished!");
-        }
-
-        await Common.BatchOperate(
-            outputs.Where(output => output is not null).Cast<FFWAROutput>().ToArray(),
-            Plotter);
-    }
-
-    public static FFWAROutput Simulate(FFWARInput input)
+    public Task<FFWAROutput> Simulate(FFWARInput input)
     {
         Debug.Assert(input is not null, "Input is null.");
         Debug.Assert(input.StepCount >= 0, "StepCount must be non-negative.");
@@ -158,13 +81,106 @@ public static class FreeFallWithAirResistance
 
         Common.Log($"{input.GetUniqueName()} processing finished!");
 
-        return new FFWAROutput(
+        return Task.FromResult(new FFWAROutput(
             Id: input.Id,
             Input: input,
             TimeSteps: timeSteps,
             Velocities: velocities,
             Positions: positions,
             DragForces: dragForces,
-            NetForces: netForces);
+            NetForces: netForces));
+    }
+
+    public Task Plot(FFWAROutput output, PlottingOptions options)
+    {
+        Debug.Assert(output is not null, "Output is null.");
+        Debug.Assert(output.TimeSteps is not null, "TimeSteps array is null.");
+        Debug.Assert(output.Velocities is not null, "Velocities array is null.");
+        Debug.Assert(output.Positions is not null, "Positions array is null.");
+
+        int n = output.Input.StepCount;
+        Debug.Assert(output.TimeSteps.Length == n, $"TimeSteps.Length != StepCount ({n})");
+        Debug.Assert(output.Velocities.Length == n, $"Velocities.Length != StepCount ({n})");
+        Debug.Assert(output.Positions.Length == n, $"Positions.Length != StepCount ({n})");
+
+        Common.Log($"Plotting {output.GetUniqueName()} started!");
+
+        ScottPlot.Plot plt = new();
+
+        plt.Add.Scatter(output.TimeSteps, output.Velocities);
+        plt.Title("Time vs. Velocity Diagram");
+        plt.XLabel("Time Steps");
+        plt.YLabel("Velocities");
+
+        plt.Save(
+            filePath: Path.Combine(
+                options.OutputDirectory,
+                $"{output.GetUniqueName()}-time-velocity.{options.Format.ToString().ToLower()}"),
+            format: options.Format,
+            width: options.Width,
+            height: options.Height);
+
+        plt = new();
+        plt.Add.Scatter(output.TimeSteps, output.Positions);
+        plt.Title("Time vs. Position Diagram");
+        plt.XLabel("Time Steps");
+        plt.YLabel("Positions");
+
+        plt.Save(
+            filePath: Path.Combine(
+                options.OutputDirectory,
+                $"{output.GetUniqueName()}-time-position.{options.Format.ToString().ToLower()}"),
+            format: options.Format,
+            width: options.Width,
+            height: options.Height);
+
+        plt = new();
+        plt.Add.Scatter(output.TimeSteps, output.NetForces);
+        plt.Title("Time vs. Net Forces Diagram");
+        plt.XLabel("Time Steps");
+        plt.YLabel("Net Forces");
+
+        plt.Save(
+            filePath: Path.Combine(
+                options.OutputDirectory,
+                $"{output.GetUniqueName()}-time-netforce.{options.Format.ToString().ToLower()}"),
+            format: options.Format,
+            width: options.Width,
+            height: options.Height);
+
+        plt = new();
+        plt.Add.Scatter(output.TimeSteps, output.DragForces);
+        plt.Title("Time vs. Drag Forces Diagram");
+        plt.XLabel("Time Steps");
+        plt.YLabel("Drag Forces");
+
+        plt.Save(
+            filePath: Path.Combine(
+                options.OutputDirectory,
+                $"{output.GetUniqueName()}-time-dragforce.{options.Format.ToString().ToLower()}"),
+            format: options.Format,
+            width: options.Width,
+            height: options.Height);
+
+        Common.Log($"Plotting {output.GetUniqueName()} finished!");
+        return Task.CompletedTask;
+    }
+
+    public static async Task DefaultSimulate()
+    {
+        Debug.Assert(Inputs is not null && Inputs.Length > 0, "Simulation input list is empty or null.");
+        IEnumerable<FFWAROutput> outputs = await Common.BatchOperate(Inputs, Instance.Value.Simulate);
+        Debug.Assert(outputs is not null, "BatchOperate returned null.");
+        await Common.WriteToJson(outputs);
+    }
+
+    public static async Task DefaultPlot()
+    {
+        FFWAROutput?[] outputs = Common.ReadToObject<FFWAROutput>(typeof(FFWAROutput).FullName!);
+        Debug.Assert(outputs is not null, "ReadToObject returned null.");
+
+        await Common.BatchOperate(
+            outputs.Where(output => output is not null).Cast<FFWAROutput>().ToArray(),
+            output => Instance.Value.Plot(output, Common.PlottingOptions));
     }
 }
