@@ -64,7 +64,7 @@ public class FreeFallWithAirResistance : ISimulation<FFWARInput, FFWAROutput>, I
 
         for (int step = 0; step < input.StepCount; step++)
         {
-            double dragForce = 0.5D * input.DragCoeffecient * Math.Pow(velocity , input.VelocityEffectivePower);
+            double dragForce = 0.5D * input.DragCoeffecient * Math.Pow(velocity, input.VelocityEffectivePower);
             double netForce = ((velocity > 0 ? -1 : 1) * dragForce) + gravityForce;
             double acceleration = netForce / input.Mass;
 

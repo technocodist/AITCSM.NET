@@ -13,5 +13,5 @@ public record class PlottingOptions(
 public interface IPlotable<TOut>
     where TOut : Identifyable
 {
-    Task Plot(TOut output,PlottingOptions options);
+    Task Plot(TOut output, PlottingOptions options);
 }

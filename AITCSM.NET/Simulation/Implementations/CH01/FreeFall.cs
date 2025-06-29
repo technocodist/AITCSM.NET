@@ -22,7 +22,7 @@ public record FFOutput(
 
 public class FreeFall : ISimulation<FFInput, FFOutput>, IPlotable<FFOutput>
 {
-    public static readonly FFInput[] Inputs  = [
+    public static readonly FFInput[] Inputs = [
         new FFInput(Id: 1, TimeStep: 0.01, StepCount: 1000, InitialVelocity: 10, InitialHeight: 0, Mass: 1, Gravity: 9.81),
         new FFInput(Id: 2, TimeStep: 0.1, StepCount: 100, InitialVelocity: 0, InitialHeight: 100, Mass: 2, Gravity: 9.81),
         new FFInput(Id: 3, TimeStep: 1.0, StepCount: 10, InitialVelocity: -5, InitialHeight: 50, Mass: 5, Gravity: 9.81),

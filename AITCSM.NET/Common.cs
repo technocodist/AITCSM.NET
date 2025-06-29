@@ -66,9 +66,9 @@ public static class Common
         return await Task.WhenAll(simulations);
     }
 
-     public static async Task<TOut[]> BatchOperate<TIn, TOut>(TIn[] inputs, Func<TIn, Task<TOut>> @operator)
+    public static async Task<TOut[]> BatchOperate<TIn, TOut>(TIn[] inputs, Func<TIn, Task<TOut>> @operator)
     {
-        Task<TOut>[] simulations = [.. inputs.Select(input =>  @operator(input))];
+        Task<TOut>[] simulations = [.. inputs.Select(input => @operator(input))];
 
         return await Task.WhenAll(simulations);
     }

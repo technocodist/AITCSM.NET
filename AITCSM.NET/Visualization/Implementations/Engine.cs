@@ -94,8 +94,8 @@ public class Engine : IEngine
             if (_inputHandler.PrimaryMouse != null)
             {
                 var cursor = _inputHandler.PrimaryMouse.Cursor;
-                cursor.CursorMode = cursor.CursorMode == CursorMode.Raw 
-                    ? CursorMode.Normal 
+                cursor.CursorMode = cursor.CursorMode == CursorMode.Raw
+                    ? CursorMode.Normal
                     : CursorMode.Raw;
                 _firstMove = true;
             }
