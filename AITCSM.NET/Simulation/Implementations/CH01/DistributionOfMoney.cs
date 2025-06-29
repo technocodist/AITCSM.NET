@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using AITCSM.NET.Abstractions;
 using AITCSM.NET.Abstractions.Entity;
 

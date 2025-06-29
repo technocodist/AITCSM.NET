@@ -11,7 +11,7 @@ public static class Program
 {
     private const int WindowWidth = 1280;
     private const int WindowHeight = 720;
-    private const string WindowTitle = "Gemini 2D/3D Engine with ImGui";
+    private const string WindowTitle = "Techno 2D/3D Engine with ImGui";
 
     private static readonly float[] CubeVertices =
     {
