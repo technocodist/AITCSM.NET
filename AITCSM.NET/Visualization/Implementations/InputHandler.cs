@@ -13,7 +13,11 @@ public class InputHandler : IInputHandler
     public IKeyboard? PrimaryKeyboard { get; private set; }
     public IMouse? PrimaryMouse { get; private set; }
 
-    public InputHandler(IInputContext inputContext, IWindow window, Action<IKeyboard, Key, int> onKeyDown, Action<IMouse, System.Numerics.Vector2> onMouseMove)
+    public InputHandler(
+        IInputContext inputContext,
+        IWindow window,
+        Action<IKeyboard, Key, int> onKeyDown,
+        Action<IMouse, System.Numerics.Vector2> onMouseMove)
     {
         _inputContext = inputContext;
         _window = window;

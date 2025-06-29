@@ -1,8 +1,8 @@
 ﻿using AITCSM.NET.Visualization.Implementations;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
-using Silk.NET.Windowing;
 using Silk.NET.OpenGL.Extensions.ImGui;
+using Silk.NET.Windowing;
 using System.Numerics;
 
 namespace AITCSM.NET;

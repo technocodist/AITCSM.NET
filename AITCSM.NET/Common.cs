@@ -1,8 +1,8 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using AITCSM.NET.Simulation.Abstractions;
 using AITCSM.NET.Simulation.Abstractions.Entity;
 using ScottPlot;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace AITCSM.NET;
 

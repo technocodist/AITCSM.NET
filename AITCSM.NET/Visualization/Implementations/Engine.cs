@@ -1,9 +1,9 @@
 using AITCSM.NET.Visualization.Abstractions;
+using ImGuiNET;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
-using Silk.NET.Windowing;
 using Silk.NET.OpenGL.Extensions.ImGui;
-using ImGuiNET;
+using Silk.NET.Windowing;
 using System.Numerics;
 
 namespace AITCSM.NET.Visualization.Implementations;
@@ -20,7 +20,14 @@ public class Engine : IEngine
     private Vector2 _lastMousePosition;
     private bool _firstMove = true;
 
-    public Engine(IWindow window, GL gl, IInputContext inputContext, ImGuiController imGuiController, IRenderer renderer, ICamera camera, InputHandler inputHandler)
+    public Engine(
+        IWindow window,
+        GL gl,
+        IInputContext inputContext,
+        ImGuiController imGuiController,
+        IRenderer renderer,
+        ICamera camera,
+        InputHandler inputHandler)
     {
         _window = window;
         _gl = gl;

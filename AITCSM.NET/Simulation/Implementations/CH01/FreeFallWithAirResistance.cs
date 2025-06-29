@@ -1,6 +1,6 @@
-using System.Diagnostics;
 using AITCSM.NET.Simulation.Abstractions;
 using AITCSM.NET.Simulation.Abstractions.Entity;
+using System.Diagnostics;
 
 namespace AITCSM.NET.Simulation.Implementations.CH01;
 
@@ -170,7 +170,7 @@ public class FreeFallWithAirResistance : ISimulation<FFWARInput, FFWAROutput>, I
     {
         Debug.Assert(Inputs is not null && Inputs.Length > 0, "Simulation input list is empty or null.");
         CancellationToken ct = new();
-        IEnumerable<FFWAROutput> outputs = await Common.BatchOperate(Inputs,input =>  Instance.Value.Simulate(input, ct));
+        IEnumerable<FFWAROutput> outputs = await Common.BatchOperate(Inputs, input => Instance.Value.Simulate(input, ct));
         Debug.Assert(outputs is not null, "BatchOperate returned null.");
         await Common.WriteToJson(outputs);
     }

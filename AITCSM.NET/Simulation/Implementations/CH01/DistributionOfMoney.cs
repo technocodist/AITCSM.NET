@@ -1,6 +1,6 @@
-using System.Diagnostics;
 using AITCSM.NET.Simulation.Abstractions;
 using AITCSM.NET.Simulation.Abstractions.Entity;
+using System.Diagnostics;
 
 namespace AITCSM.NET.Simulation.Implementations.CH01;
 
@@ -88,7 +88,7 @@ public class DistributionOfMoney : ISimulation<DOMInput, DOMOutput>, IPlotable<D
         Debug.Assert(domInputs is not null && domInputs.Length > 0, "domInputs must not be null or empty.");
         CancellationToken ct = new();
 
-        IEnumerable<DOMOutput> domOutputs = await Common.BatchOperate(domInputs,input => Instance.Value.Simulate(input, ct));
+        IEnumerable<DOMOutput> domOutputs = await Common.BatchOperate(domInputs, input => Instance.Value.Simulate(input, ct));
         Debug.Assert(domOutputs is not null, "BatchSimulate returned null.");
         await Common.WriteToJson(domOutputs);
     }

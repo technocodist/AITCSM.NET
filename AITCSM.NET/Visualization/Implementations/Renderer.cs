@@ -14,7 +14,12 @@ public unsafe class Renderer : IRenderer
     private readonly ICamera _camera;
     private readonly Func<double> _getTime;
 
-    public Renderer(GL gl, float[] vertices, uint[] indices, ICamera camera, Func<double> getTime)
+    public Renderer(
+        GL gl,
+        float[] vertices,
+        uint[] indices,
+        ICamera camera,
+        Func<double> getTime)
     {
         _gl = gl;
         _vertices = vertices;
@@ -85,21 +90,32 @@ public unsafe class Renderer : IRenderer
         return program;
     }
 
-    private const string VertexShaderSource = @"#version 330 core
-layout (location = 0) in vec3 aPosition;
-layout (location = 1) in vec3 aColor;
-out vec3 fColor;
-uniform mat4 uModel;
-uniform mat4 uView;
-uniform mat4 uProjection;
-void main() {
-    gl_Position = uProjection * uView * uModel * vec4(aPosition, 1.0);
-    fColor = aColor;
-}";
-    private const string FragmentShaderSource = @"#version 330 core
-in vec3 fColor;
-out vec4 FragColor;
-void main() {
-    FragColor = vec4(fColor, 1.0);
-}";
+    private const string VertexShaderSource =
+    """
+    #version 330 core
+
+    layout (location = 0) in vec3 aPosition;
+    layout (location = 1) in vec3 aColor;
+    out vec3 fColor;
+    uniform mat4 uModel;
+    uniform mat4 uView;
+    uniform mat4 uProjection;
+    
+    void main() {
+        gl_Position = uProjection * uView * uModel * vec4(aPosition, 1.0);
+        fColor = aColor;
+    }
+    """;
+
+    private const string FragmentShaderSource =
+    """
+    #version 330 core
+    in vec3 fColor;
+    out vec4 FragColor;
+    
+    void main() {
+        FragColor = vec4(fColor, 1.0);
+    }
+    """;
+
 }

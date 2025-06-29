@@ -1,5 +1,5 @@
-using System.Numerics;
 using AITCSM.NET.Visualization.Abstractions;
+using System.Numerics;
 
 namespace AITCSM.NET.Visualization.Implementations;
 
@@ -23,9 +23,15 @@ public class Camera : ICamera
         UpdateVectors();
     }
 
-    public Matrix4x4 GetViewMatrix() => Matrix4x4.CreateLookAt(Position, Position + Front, Up);
+    public Matrix4x4 GetViewMatrix()
+    {
+        return Matrix4x4.CreateLookAt(Position, Position + Front, Up);
+    }
 
-    public Matrix4x4 GetProjectionMatrix() => Matrix4x4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(_fov), AspectRatio, 0.1f, 100.0f);
+    public Matrix4x4 GetProjectionMatrix()
+    {
+        return Matrix4x4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(_fov), AspectRatio, 0.1f, 100.0f);
+    }
 
     public void Update(object? keyboard, float deltaTime)
     {
