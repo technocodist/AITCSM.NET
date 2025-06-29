@@ -1,8 +1,8 @@
 using System.Diagnostics;
-using AITCSM.NET.Abstractions;
-using AITCSM.NET.Abstractions.Entity;
+using AITCSM.NET.Simulation.Abstractions;
+using AITCSM.NET.Simulation.Abstractions.Entity;
 
-namespace AITCSM.NET.Implementations.Simulation.CH01;
+namespace AITCSM.NET.Simulation.Implementations.CH01;
 
 public record DOMSavingInput(int Id, int NumberOfAgents, double InitialMoney, int NumberOfIterations, double Lambda) : Identifyable(Id);
 public record DOMSavingOutput(int Id, DOMSavingInput Input, double[] Agents) : Identifyable(Id);
@@ -23,7 +23,7 @@ public class DistributionOfMoneyWithSaving : ISimulation<DOMSavingInput, DOMSavi
 
     public static readonly Lazy<DistributionOfMoneyWithSaving> Instance = new(() => new DistributionOfMoneyWithSaving());
 
-    public Task<DOMSavingOutput> Simulate(DOMSavingInput input)
+    public Task<DOMSavingOutput> Simulate(DOMSavingInput input, CancellationToken ct)
     {
         Debug.Assert(input is not null, "Input must not be null.");
         Debug.Assert(input.NumberOfAgents > 1, "NumberOfAgents must be greater than 1.");
@@ -91,8 +91,8 @@ public class DistributionOfMoneyWithSaving : ISimulation<DOMSavingInput, DOMSavi
     public static async Task DefaultSimulate()
     {
         Debug.Assert(domSavingInputs is not null && domSavingInputs.Length > 0, "Input array must not be null or empty.");
-
-        IEnumerable<DOMSavingOutput> domSavingOutputs = await Common.BatchOperate(domSavingInputs, Instance.Value.Simulate);
+        CancellationToken ct = new();
+        IEnumerable<DOMSavingOutput> domSavingOutputs = await Common.BatchOperate(domSavingInputs,input => Instance.Value.Simulate(input, ct));
         Debug.Assert(domSavingOutputs is not null, "BatchSimulate returned null.");
 
         await Common.WriteToJson(domSavingOutputs);

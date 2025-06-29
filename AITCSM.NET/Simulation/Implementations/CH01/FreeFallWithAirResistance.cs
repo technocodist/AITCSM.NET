@@ -1,8 +1,8 @@
 using System.Diagnostics;
-using AITCSM.NET.Abstractions;
-using AITCSM.NET.Abstractions.Entity;
+using AITCSM.NET.Simulation.Abstractions;
+using AITCSM.NET.Simulation.Abstractions.Entity;
 
-namespace AITCSM.NET.Implementations.Simulation.CH01;
+namespace AITCSM.NET.Simulation.Implementations.CH01;
 
 public record FFWARInput(
     int Id,
@@ -41,7 +41,7 @@ public class FreeFallWithAirResistance : ISimulation<FFWARInput, FFWAROutput>, I
 
     public static readonly Lazy<FreeFallWithAirResistance> Instance = new(() => new FreeFallWithAirResistance());
 
-    public Task<FFWAROutput> Simulate(FFWARInput input)
+    public Task<FFWAROutput> Simulate(FFWARInput input, CancellationToken ct)
     {
         Debug.Assert(input is not null, "Input is null.");
         Debug.Assert(input.StepCount >= 0, "StepCount must be non-negative.");
@@ -65,7 +65,7 @@ public class FreeFallWithAirResistance : ISimulation<FFWARInput, FFWAROutput>, I
         for (int step = 0; step < input.StepCount; step++)
         {
             double dragForce = 0.5D * input.DragCoeffecient * Math.Pow(velocity, input.VelocityEffectivePower);
-            double netForce = ((velocity > 0 ? -1 : 1) * dragForce) + gravityForce;
+            double netForce = (velocity > 0 ? -1 : 1) * dragForce + gravityForce;
             double acceleration = netForce / input.Mass;
 
             velocity += acceleration * input.TimeStep;
@@ -169,7 +169,8 @@ public class FreeFallWithAirResistance : ISimulation<FFWARInput, FFWAROutput>, I
     public static async Task DefaultSimulate()
     {
         Debug.Assert(Inputs is not null && Inputs.Length > 0, "Simulation input list is empty or null.");
-        IEnumerable<FFWAROutput> outputs = await Common.BatchOperate(Inputs, Instance.Value.Simulate);
+        CancellationToken ct = new();
+        IEnumerable<FFWAROutput> outputs = await Common.BatchOperate(Inputs,input =>  Instance.Value.Simulate(input, ct));
         Debug.Assert(outputs is not null, "BatchOperate returned null.");
         await Common.WriteToJson(outputs);
     }

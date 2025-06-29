@@ -1,8 +1,8 @@
 using System.Diagnostics;
-using AITCSM.NET.Abstractions;
-using AITCSM.NET.Abstractions.Entity;
+using AITCSM.NET.Simulation.Abstractions;
+using AITCSM.NET.Simulation.Abstractions.Entity;
 
-namespace AITCSM.NET.Implementations.Simulation.CH01;
+namespace AITCSM.NET.Simulation.Implementations.CH01;
 
 public record FFInput(
     int Id,
@@ -37,7 +37,7 @@ public class FreeFall : ISimulation<FFInput, FFOutput>, IPlotable<FFOutput>
 
     public static readonly Lazy<FreeFall> Instance = new(() => new FreeFall());
 
-    public Task<FFOutput> Simulate(FFInput input)
+    public Task<FFOutput> Simulate(FFInput input, CancellationToken ct)
     {
         Debug.Assert(input is not null, "Input is null.");
         Debug.Assert(input.StepCount >= 0, "StepCount must be non-negative.");
@@ -128,7 +128,8 @@ public class FreeFall : ISimulation<FFInput, FFOutput>, IPlotable<FFOutput>
     public static async Task DefaultSimulate()
     {
         Debug.Assert(Inputs is not null && Inputs.Length > 0, "Simulation input list is empty or null.");
-        IEnumerable<FFOutput> outputs = await Common.BatchOperate(Inputs, Instance.Value.Simulate);
+        CancellationToken ct = new();
+        IEnumerable<FFOutput> outputs = await Common.BatchOperate(Inputs,input => Instance.Value.Simulate(input, ct));
         Debug.Assert(outputs is not null, "BatchOperate returned null.");
         await Common.WriteToJson(outputs);
     }

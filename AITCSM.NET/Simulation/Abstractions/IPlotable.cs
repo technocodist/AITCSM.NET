@@ -1,7 +1,7 @@
-using AITCSM.NET.Abstractions.Entity;
+using AITCSM.NET.Simulation.Abstractions.Entity;
 using ScottPlot;
 
-namespace AITCSM.NET.Abstractions;
+namespace AITCSM.NET.Simulation.Abstractions;
 
 public record class PlottingOptions(
     string OutputDirectory,
