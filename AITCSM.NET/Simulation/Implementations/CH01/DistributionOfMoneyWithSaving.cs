@@ -9,7 +9,7 @@ public record DOMSavingOutput(int Id, DOMSavingInput Input, double[] Agents) : I
 
 public class DistributionOfMoneyWithSaving : ISimulation<DOMSavingInput, DOMSavingOutput>, IPlotable<DOMSavingOutput>
 {
-    private static DOMSavingInput[] domSavingInputs { get; } = [
+    public static DOMSavingInput[] Inputs { get; } = [
         new DOMSavingInput(Id: 1, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 100_000, Lambda: 0.1),
         new DOMSavingInput(Id: 2, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 100_000, Lambda: 0.2),
         new DOMSavingInput(Id: 3, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 100_000, Lambda: 0.3),
@@ -90,9 +90,9 @@ public class DistributionOfMoneyWithSaving : ISimulation<DOMSavingInput, DOMSavi
 
     public static async Task DefaultSimulate()
     {
-        Debug.Assert(domSavingInputs is not null && domSavingInputs.Length > 0, "Input array must not be null or empty.");
+        Debug.Assert(Inputs is not null && Inputs.Length > 0, "Input array must not be null or empty.");
         CancellationToken ct = new();
-        IEnumerable<DOMSavingOutput> domSavingOutputs = await Common.BatchOperate(domSavingInputs, input => Instance.Value.Simulate(input, ct));
+        IEnumerable<DOMSavingOutput> domSavingOutputs = await Common.BatchOperate(Inputs, input => Instance.Value.Simulate(input, ct));
         Debug.Assert(domSavingOutputs is not null, "BatchSimulate returned null.");
 
         await Common.WriteToJson(domSavingOutputs);

@@ -9,7 +9,7 @@ public record DOMOutput(int Id, DOMInput Input, double[] Agents) : Identifyable(
 
 public class DistributionOfMoney : ISimulation<DOMInput, DOMOutput>, IPlotable<DOMOutput>
 {
-    private static DOMInput[] domInputs { get; } = [
+    public static DOMInput[] Inputs { get; } = [
         new DOMInput(Id: 1, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 100_000),
         new DOMInput(Id: 2, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 200_000),
         new DOMInput(Id: 3, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 400_000)
@@ -85,10 +85,10 @@ public class DistributionOfMoney : ISimulation<DOMInput, DOMOutput>, IPlotable<D
 
     public static async Task DefaultSimulate()
     {
-        Debug.Assert(domInputs is not null && domInputs.Length > 0, "domInputs must not be null or empty.");
+        Debug.Assert(Inputs is not null && Inputs.Length > 0, "domInputs must not be null or empty.");
         CancellationToken ct = new();
 
-        IEnumerable<DOMOutput> domOutputs = await Common.BatchOperate(domInputs, input => Instance.Value.Simulate(input, ct));
+        IEnumerable<DOMOutput> domOutputs = await Common.BatchOperate(Inputs, input => Instance.Value.Simulate(input, ct));
         Debug.Assert(domOutputs is not null, "BatchSimulate returned null.");
         await Common.WriteToJson(domOutputs);
     }
