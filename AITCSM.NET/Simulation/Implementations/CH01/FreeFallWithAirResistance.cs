@@ -1,6 +1,7 @@
 using AITCSM.NET.Simulation.Abstractions;
 using AITCSM.NET.Simulation.Abstractions.Entity;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace AITCSM.NET.Simulation.Implementations.CH01;
 
@@ -91,7 +92,7 @@ public class FreeFallWithAirResistance : ISimulation<FFWARInput, FFWAROutput>, I
             NetForces: netForces));
     }
 
-    public Task Plot(FFWAROutput output, PlottingOptions options)
+    public async IAsyncEnumerable<PlottingResult> Plot(FFWAROutput output, PlottingOptions options)
     {
         Debug.Assert(output is not null, "Output is null.");
         Debug.Assert(output.TimeSteps is not null, "TimeSteps array is null.");
@@ -112,58 +113,58 @@ public class FreeFallWithAirResistance : ISimulation<FFWARInput, FFWAROutput>, I
         plt.XLabel("Time Steps");
         plt.YLabel("Velocities");
 
-        plt.Save(
-            filePath: Path.Combine(
-                options.OutputDirectory,
-                $"{output.GetUniqueName()}-time-velocity.{options.Format.ToString().ToLower()}"),
-            format: options.Format,
-            width: options.Width,
-            height: options.Height);
+        yield return new PlottingResult(
+            Name:  $"{output.GetUniqueName()}-time-velocity",
+            ImageBytes: plt.GetImage(options.Width, options.Height).GetImageBytes(),
+            Format: options.Format,
+            Width: options.Width,
+            Height: options.Height
+        );
 
-        plt = new();
+        plt.Clear();
         plt.Add.Scatter(output.TimeSteps, output.Positions);
         plt.Title("Time vs. Position Diagram");
         plt.XLabel("Time Steps");
         plt.YLabel("Positions");
 
-        plt.Save(
-            filePath: Path.Combine(
-                options.OutputDirectory,
-                $"{output.GetUniqueName()}-time-position.{options.Format.ToString().ToLower()}"),
-            format: options.Format,
-            width: options.Width,
-            height: options.Height);
+        yield return new PlottingResult(
+            Name:  $"{output.GetUniqueName()}-time-position",
+            ImageBytes: plt.GetImage(options.Width, options.Height).GetImageBytes(),
+            Format: options.Format,
+            Width: options.Width,
+            Height: options.Height
+        );
 
-        plt = new();
+        plt.Clear();
         plt.Add.Scatter(output.TimeSteps, output.NetForces);
         plt.Title("Time vs. Net Forces Diagram");
         plt.XLabel("Time Steps");
         plt.YLabel("Net Forces");
 
-        plt.Save(
-            filePath: Path.Combine(
-                options.OutputDirectory,
-                $"{output.GetUniqueName()}-time-netforce.{options.Format.ToString().ToLower()}"),
-            format: options.Format,
-            width: options.Width,
-            height: options.Height);
+        yield return new PlottingResult(
+            Name:  $"{output.GetUniqueName()}-time-netforce",
+            ImageBytes: plt.GetImage(options.Width, options.Height).GetImageBytes(),
+            Format: options.Format,
+            Width: options.Width,
+            Height: options.Height
+        );
 
-        plt = new();
+        plt.Clear();
         plt.Add.Scatter(output.TimeSteps, output.DragForces);
         plt.Title("Time vs. Drag Forces Diagram");
         plt.XLabel("Time Steps");
         plt.YLabel("Drag Forces");
 
-        plt.Save(
-            filePath: Path.Combine(
-                options.OutputDirectory,
-                $"{output.GetUniqueName()}-time-dragforce.{options.Format.ToString().ToLower()}"),
-            format: options.Format,
-            width: options.Width,
-            height: options.Height);
+        yield return new PlottingResult(
+            Name:  $"{output.GetUniqueName()}-time-dragforce",
+            ImageBytes: plt.GetImage(options.Width, options.Height).GetImageBytes(),
+            Format: options.Format,
+            Width: options.Width,
+            Height: options.Height
+        );
 
         Common.Log($"Plotting {output.GetUniqueName()} finished!");
-        return Task.CompletedTask;
+        await Task.CompletedTask;
     }
 
     public static async Task DefaultSimulate()

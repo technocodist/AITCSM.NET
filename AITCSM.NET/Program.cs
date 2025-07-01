@@ -1,1 +1,3 @@
-﻿System.Console.WriteLine("Hello, AITCSM.NET!");
+﻿using AITCSM.NET.Visualization;
+
+VisualizationBase.Run();

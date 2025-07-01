@@ -3,8 +3,15 @@ using ScottPlot;
 
 namespace AITCSM.NET.Simulation.Abstractions;
 
-public record class PlottingOptions(
-    string OutputDirectory,
+public record struct PlottingResult(
+    string Name,
+    byte[] ImageBytes,
+    ImageFormat Format,
+    int Width,
+    int Height
+);
+
+public record struct PlottingOptions(
     ImageFormat Format,
     int Width,
     int Height
@@ -13,5 +20,5 @@ public record class PlottingOptions(
 public interface IPlotable<TOut>
     where TOut : Identifyable
 {
-    Task Plot(TOut output, PlottingOptions options);
+    IAsyncEnumerable<PlottingResult> Plot(TOut output, PlottingOptions options);
 }

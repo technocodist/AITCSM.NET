@@ -17,7 +17,6 @@ public static class Common
     public static string OutputDir { get; } = "./Results";
 
     public static PlottingOptions PlottingOptions { get; } = new(
-        OutputDirectory: OutputDir,
         Format: ImageFormat.Png,
         Width: 720,
         Height: 480

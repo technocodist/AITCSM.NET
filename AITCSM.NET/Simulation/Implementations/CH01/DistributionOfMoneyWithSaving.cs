@@ -1,6 +1,7 @@
 using AITCSM.NET.Simulation.Abstractions;
 using AITCSM.NET.Simulation.Abstractions.Entity;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace AITCSM.NET.Simulation.Implementations.CH01;
 
@@ -62,7 +63,7 @@ public class DistributionOfMoneyWithSaving : ISimulation<DOMSavingInput, DOMSavi
         return Task.FromResult(new DOMSavingOutput(input.Id, input, agents));
     }
 
-    public Task Plot(DOMSavingOutput output, PlottingOptions options)
+    public async IAsyncEnumerable<PlottingResult> Plot(DOMSavingOutput output, PlottingOptions options)
     {
         Debug.Assert(output.Input is not null, "Output.Input must not be null.");
         Debug.Assert(output.Agents is not null, "Output.Agents must not be null.");
@@ -76,16 +77,16 @@ public class DistributionOfMoneyWithSaving : ISimulation<DOMSavingInput, DOMSavi
             .. Enumerable.Range(0, output.Input.NumberOfAgents).Select(x => (double)x)
         ], output.Agents);
 
-        plt.Save(
-            filePath: Path.Combine(
-                options.OutputDirectory,
-                $"{output.GetUniqueName()}.{options.Format.ToString().ToLower()}"),
-            format: options.Format,
-            width: options.Width,
-            height: options.Height);
+        yield return new PlottingResult(
+            Name: output.GetUniqueName(),
+            ImageBytes: plt.GetImage(options.Width, options.Height).GetImageBytes(),
+            Format: options.Format,
+            Width: options.Width,
+            Height: options.Height
+        );
 
         Common.Log($"Plotting {output.GetUniqueName()} finished!");
-        return Task.CompletedTask;
+        await Task.CompletedTask;
     }
 
     public static async Task DefaultSimulate()
