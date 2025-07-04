@@ -1,7 +1,6 @@
 using AITCSM.NET.Simulation.Abstractions;
 using AITCSM.NET.Simulation.Abstractions.Entity;
 using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace AITCSM.NET.Simulation.Implementations.CH01;
 
@@ -101,21 +100,21 @@ public class FreeFall : ISimulation<FFInput, FFOutput>, IPlotable<FFOutput>
         plt.YLabel("Velocities");
 
         yield return new PlottingResult(
-            Name:  $"{output.GetUniqueName()}-time-velocity",
+            Name: $"{output.GetUniqueName()}-time-velocity",
             ImageBytes: plt.GetImage(options.Width, options.Height).GetImageBytes(),
             Format: options.Format,
             Width: options.Width,
             Height: options.Height
         );
 
-        plt.Clear(); 
+        plt.Clear();
         plt.Add.Scatter(output.TimeSteps, output.Positions);
         plt.Title("Time vs. Position Diagram");
         plt.XLabel("Time Steps");
         plt.YLabel("Positions");
 
         yield return new PlottingResult(
-            Name:  $"{output.GetUniqueName()}-time-position",
+            Name: $"{output.GetUniqueName()}-time-position",
             ImageBytes: plt.GetImage(options.Width, options.Height).GetImageBytes(),
             Format: options.Format,
             Width: options.Width,

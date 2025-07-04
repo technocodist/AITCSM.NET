@@ -1,7 +1,6 @@
 using AITCSM.NET.Simulation.Abstractions;
 using AITCSM.NET.Simulation.Abstractions.Entity;
 using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace AITCSM.NET.Simulation.Implementations.CH01;
 
@@ -114,7 +113,7 @@ public class FreeFallWithAirResistance : ISimulation<FFWARInput, FFWAROutput>, I
         plt.YLabel("Velocities");
 
         yield return new PlottingResult(
-            Name:  $"{output.GetUniqueName()}-time-velocity",
+            Name: $"{output.GetUniqueName()}-time-velocity",
             ImageBytes: plt.GetImage(options.Width, options.Height).GetImageBytes(),
             Format: options.Format,
             Width: options.Width,
@@ -128,7 +127,7 @@ public class FreeFallWithAirResistance : ISimulation<FFWARInput, FFWAROutput>, I
         plt.YLabel("Positions");
 
         yield return new PlottingResult(
-            Name:  $"{output.GetUniqueName()}-time-position",
+            Name: $"{output.GetUniqueName()}-time-position",
             ImageBytes: plt.GetImage(options.Width, options.Height).GetImageBytes(),
             Format: options.Format,
             Width: options.Width,
@@ -142,7 +141,7 @@ public class FreeFallWithAirResistance : ISimulation<FFWARInput, FFWAROutput>, I
         plt.YLabel("Net Forces");
 
         yield return new PlottingResult(
-            Name:  $"{output.GetUniqueName()}-time-netforce",
+            Name: $"{output.GetUniqueName()}-time-netforce",
             ImageBytes: plt.GetImage(options.Width, options.Height).GetImageBytes(),
             Format: options.Format,
             Width: options.Width,
@@ -156,7 +155,7 @@ public class FreeFallWithAirResistance : ISimulation<FFWARInput, FFWAROutput>, I
         plt.YLabel("Drag Forces");
 
         yield return new PlottingResult(
-            Name:  $"{output.GetUniqueName()}-time-dragforce",
+            Name: $"{output.GetUniqueName()}-time-dragforce",
             ImageBytes: plt.GetImage(options.Width, options.Height).GetImageBytes(),
             Format: options.Format,
             Width: options.Width,

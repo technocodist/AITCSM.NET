@@ -1,7 +1,6 @@
 using AITCSM.NET.Simulation.Abstractions;
 using AITCSM.NET.Simulation.Abstractions.Entity;
 using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace AITCSM.NET.Simulation.Implementations.CH01;
 
