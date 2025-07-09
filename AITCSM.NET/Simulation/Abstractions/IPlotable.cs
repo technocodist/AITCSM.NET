@@ -1,4 +1,4 @@
-using AITCSM.NET.Simulation.Abstractions.Entity;
+using AITCSM.NET.Data.Entities.Abstractions;
 using ScottPlot;
 
 namespace AITCSM.NET.Simulation.Abstractions;
@@ -18,7 +18,7 @@ public record struct PlottingOptions(
 );
 
 public interface IPlotable<TOut>
-    where TOut : Identifyable
+    where TOut : EntityBase
 {
     IAsyncEnumerable<PlottingResult> Plot(TOut output, PlottingOptions options);
 }

@@ -11,5 +11,10 @@ format:
 	dotnet format .\AITCSM.NET.sln style
 	dotnet format .\AITCSM.NET.sln analyzers
 
+MIGRATION_NAME = "default"
+
+migrate:
+	dotnet ef migrations add $(MIGRATION_NAME) --project .\AITCSM.NET\ --output-dir Data/EF/Migrations
+
 clean:
 	rm -rf Results

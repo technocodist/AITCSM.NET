@@ -1,35 +1,33 @@
+using AITCSM.NET.Data;
 using AITCSM.NET.Simulation.Abstractions;
-using AITCSM.NET.Simulation.Abstractions.Entity;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 namespace AITCSM.NET.Simulation.Implementations.CH01;
 
-public record DOMInput(int Id, int NumberOfAgents, double InitialMoney, int NumberOfIterations) : Identifyable(Id);
-public record DOMOutput(int Id, DOMInput Input, double[] Agents) : Identifyable(Id);
-
-public class DistributionOfMoney : ISimulation<DOMInput, DOMOutput>, IPlotable<DOMOutput>
+public class DistributionOfMoneySimulation :
+                    ISimulation<DistributionOfMoney, DistributionOfMoneyStepResult>,
+                    IPlotable<DistributionOfMoneyStepResult>
 {
-    public static DOMInput[] Inputs { get; } = [
-        new DOMInput(Id: 1, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 100_000),
-        new DOMInput(Id: 2, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 200_000),
-        new DOMInput(Id: 3, NumberOfAgents: 100, InitialMoney: 1000.0D, NumberOfIterations: 400_000)
+    public static DistributionOfMoney[] Inputs { get; } = [
+        new() {  NumberOfAgents= 100, InitialMoney= 1000.0D, NumberOfIterations= 100_000, InitialRandomSeed = 7, ResultPerSteps = 10},
+        new() {  NumberOfAgents= 100, InitialMoney= 1000.0D, NumberOfIterations= 200_000, InitialRandomSeed = 7, ResultPerSteps = 10},
+        new() {  NumberOfAgents= 100, InitialMoney= 1000.0D, NumberOfIterations= 400_000, InitialRandomSeed = 7, ResultPerSteps = 10}
     ];
 
-    public static readonly Lazy<DistributionOfMoney> Instance = new(() => new DistributionOfMoney());
+    public static readonly Lazy<DistributionOfMoneySimulation> Instance = new(() => new DistributionOfMoneySimulation());
 
-    public async IAsyncEnumerable<PlottingResult> Plot(DOMOutput output, PlottingOptions options)
+    public async IAsyncEnumerable<PlottingResult> Plot(DistributionOfMoneyStepResult output, PlottingOptions options)
     {
-        Debug.Assert(output.Input is not null, "DOMOutput.Input must not be null.");
-        Debug.Assert(output.Agents is not null, "Agents array must not be null.");
-        Debug.Assert(output.Agents.Length == output.Input.NumberOfAgents,
-            $"Agents array length ({output.Agents.Length}) must match NumberOfAgents ({output.Input.NumberOfAgents}).");
+        Debug.Assert(output.MoneyDistribution is not null, "Agents array must not be null.");
 
         Common.Log($"Plotting {output.GetUniqueName()} started!");
 
         ScottPlot.Plot plt = new();
         plt.Add.Scatter(
-            [.. Enumerable.Range(0, output.Input.NumberOfAgents).Select(x => (double)x)],
-            output.Agents);
+            [.. Enumerable.Range(0, output.MoneyDistribution.Length).Select(x => (double)x)],
+            output.MoneyDistribution);
 
         yield return new PlottingResult(
             Name: output.GetUniqueName(),
@@ -44,7 +42,7 @@ public class DistributionOfMoney : ISimulation<DOMInput, DOMOutput>, IPlotable<D
         await Task.CompletedTask;
     }
 
-    public Task<DOMOutput> Simulate(DOMInput input, CancellationToken ct)
+    public async IAsyncEnumerable<DistributionOfMoneyStepResult> Simulate(DistributionOfMoney input, [EnumeratorCancellation] CancellationToken ct)
     {
         Debug.Assert(input is not null, "Input must not be null.");
         Debug.Assert(input.NumberOfAgents > 1, "NumberOfAgents must be greater than 1.");
@@ -53,13 +51,17 @@ public class DistributionOfMoney : ISimulation<DOMInput, DOMOutput>, IPlotable<D
 
         Common.Log($"{input.GetUniqueName()} processing started!");
 
-        double[] agents = [.. Enumerable.Range(0, input.NumberOfAgents).Select(_ => input.InitialMoney)];
-        Debug.Assert(agents.Length == input.NumberOfAgents, "Agents array was not properly initialized.");
+        double[] agentsMoneyDistribution = [.. Enumerable.Range(0, input.NumberOfAgents).Select(_ => input.InitialMoney)];
+        Debug.Assert(agentsMoneyDistribution.Length == input.NumberOfAgents, "Agents array was not properly initialized.");
+
+        Random random = new(input.InitialRandomSeed);
 
         for (int i = 0; i < input.NumberOfIterations; i++)
         {
-            int randI = Random.Shared.Next(0, input.NumberOfAgents);
-            int randJ = Random.Shared.Next(0, input.NumberOfAgents);
+            ct.ThrowIfCancellationRequested();
+
+            int randI = random.Next(0, input.NumberOfAgents);
+            int randJ = random.Next(0, input.NumberOfAgents);
 
             Debug.Assert(randI >= 0 && randI < input.NumberOfAgents, "randI is out of valid agent index range.");
             Debug.Assert(randJ >= 0 && randJ < input.NumberOfAgents, "randJ is out of valid agent index range.");
@@ -69,38 +71,62 @@ public class DistributionOfMoney : ISimulation<DOMInput, DOMOutput>, IPlotable<D
                 continue;
             }
 
-            double epsilon = Random.Shared.NextDouble();
+            double epsilon = random.NextDouble();
             Debug.Assert(epsilon >= 0.0 && epsilon <= 1.0, "Epsilon must be between 0.0 and 1.0.");
 
-            double totalMoney = agents[randI] + agents[randJ];
+            double totalMoney = agentsMoneyDistribution[randI] + agentsMoneyDistribution[randJ];
 
             Debug.Assert(totalMoney >= 0.0, "Total money between two agents must not be negative.");
 
-            agents[randI] = epsilon * totalMoney;
-            agents[randJ] = (1.0 - epsilon) * totalMoney;
+            agentsMoneyDistribution[randI] = epsilon * totalMoney;
+            agentsMoneyDistribution[randJ] = (1.0 - epsilon) * totalMoney;
+
+            if (i % input.ResultPerSteps == 0)
+            {
+                yield return new DistributionOfMoneyStepResult()
+                {
+                    DistributionOfMoneyId = input.Id,
+                    StepNumber = i,
+                    MoneyDistribution = [.. agentsMoneyDistribution]
+                };
+            }
         }
 
         Common.Log($"{input.GetUniqueName()} processing finished!");
-        return Task.FromResult(new DOMOutput(input.Id, input, agents));
+        await Task.CompletedTask;
     }
 
     public static async Task DefaultSimulate()
     {
         Debug.Assert(Inputs is not null && Inputs.Length > 0, "domInputs must not be null or empty.");
-        CancellationToken ct = new();
 
-        IEnumerable<DOMOutput> domOutputs = await Common.BatchOperate(Inputs, input => Instance.Value.Simulate(input, ct));
-        Debug.Assert(domOutputs is not null, "BatchSimulate returned null.");
-        await Common.WriteToJson(domOutputs);
+        IAsyncEnumerable<DistributionOfMoneyStepResult> outputTasks = Instance.Value.RunConcurrentSimulations(
+            Inputs,
+            degreeOfParallelism: Environment.ProcessorCount);
+
+        int count = 0;
+
+        await foreach (DistributionOfMoneyStepResult output in outputTasks)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(output, Common.JsonSerializerOptions));
+            Console.WriteLine();
+
+            ++count;
+
+            if (count / 10.0D > 1)
+            {
+                return;
+            }
+        }
     }
 
     public static async Task DefaultPlot()
     {
-        DOMOutput?[] outputs = Common.ReadToObject<DOMOutput>(typeof(DOMOutput).FullName!);
+        DistributionOfMoneyStepResult?[] outputs = Common.ReadToObject<DistributionOfMoneyStepResult>(typeof(DistributionOfMoneyStepResult).FullName!);
         Debug.Assert(outputs is not null, "ReadToObject returned null.");
 
         await Common.BatchOperate(
-            outputs.Where(output => output is { }).Cast<DOMOutput>().ToArray(),
+            outputs.Where(output => output is { }).Cast<DistributionOfMoneyStepResult>().ToArray(),
             output => Instance.Value.Plot(output, Common.PlottingOptions));
     }
 }

@@ -1,8 +1,11 @@
+using AITCSM.NET.Data.Entities.Abstractions;
 using AITCSM.NET.Simulation.Abstractions;
 using AITCSM.NET.Simulation.Abstractions.Entity;
 using ScottPlot;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Channels;
 
 namespace AITCSM.NET;
 
@@ -56,6 +59,64 @@ public static class Common
 
         await Task.WhenAll(tasks);
     }
+
+    public static async IAsyncEnumerable<TOut> RunConcurrentSimulations<TIn, TOut>(
+        this ISimulation<TIn, TOut> simulator,
+        IEnumerable<TIn> inputs,
+        int degreeOfParallelism,
+        int channelCapacity = 1000,
+        [EnumeratorCancellation] CancellationToken ct = default)
+        where TIn : EntityBase
+        where TOut : EntityBase
+    {
+        Channel<TOut> channel = Channel.CreateBounded<TOut>(new BoundedChannelOptions(channelCapacity)
+        {
+            FullMode = BoundedChannelFullMode.Wait,
+            SingleReader = true,
+            SingleWriter = false
+        });
+
+        SemaphoreSlim throttler = new(degreeOfParallelism);
+
+        List<Task> tasks = [.. inputs.Select(async input =>
+            {
+                await throttler.WaitAsync(ct);
+
+                try
+                {
+                    await foreach (TOut result in simulator.Simulate(input, ct).WithCancellation(ct))
+                    {
+                        await channel.Writer.WriteAsync(result, ct);
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // Graceful shutdown
+                }
+                catch (Exception ex)
+                {
+                    channel.Writer.TryComplete(ex);
+                    throw;
+                }
+                finally
+                {
+                    throttler.Release();
+                }
+            }
+        )];
+
+        _ = Task.WhenAll(tasks).ContinueWith(task =>
+        {
+            channel.Writer.TryComplete(task.Exception);
+        }, ct);
+
+        await foreach (TOut item in channel.Reader.ReadAllAsync(ct))
+        {
+            yield return item;
+        }
+    }
+
+
 
     public static async Task<TOut[]> BatchOperate<TIn, TOut>(TIn[] inputs, Func<TIn, TOut> @operator)
     {
