@@ -1,6 +1,5 @@
 using AITCSM.NET.Data.Entities.Abstractions;
 using AITCSM.NET.Simulation.Abstractions;
-using AITCSM.NET.Simulation.Abstractions.Entity;
 using ScottPlot;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
@@ -43,7 +42,7 @@ public static class Common
     }
 
     public static async Task WriteToJson<T>(IEnumerable<T> inputs)
-        where T : notnull, Identifyable
+        where T : notnull, EntityBase
     {
         if (!Directory.Exists(OutputDir))
         {
