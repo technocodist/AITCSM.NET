@@ -8,7 +8,7 @@ namespace AITCSM.NET.UI;
 public partial class MainWindow : Window
 {
     private readonly IServiceProvider _serviceProvider;
-        
+
     public MainWindow(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
@@ -21,9 +21,7 @@ public partial class MainWindow : Window
     {
         // Use reflection to find all ISimulation<,> implementations
         Type simType = typeof(ISimulation<,>);
-        List<Type> types = Assembly.GetExecutingAssembly().GetTypes()
-            .Where(t => t.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == simType) && !t.IsInterface && !t.IsAbstract)
-            .ToList();
+        List<Type> types = [.. Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == simType) && !t.IsInterface && !t.IsAbstract)];
         SimulationListBox.ItemsSource = types.Select(t => t.Name).ToList();
     }
 

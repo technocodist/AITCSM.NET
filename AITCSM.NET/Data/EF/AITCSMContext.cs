@@ -1,17 +1,32 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
 
-namespace AITCSM.NET.Data.EF
+namespace AITCSM.NET.Data.EF;
+
+public class AITCSMContext(DbContextOptions<AITCSMContext> options) :
+    DbContext(options),
+    IDesignTimeDbContextFactory<AITCSMContext>
 {
-    public class AITCSMContext(DbContextOptions<AITCSMContext> options) : DbContext(options)
+    public AITCSMContext() : this(new())
     {
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
-
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(AITCSMContext).Assembly);
-        }
-
-        public virtual DbSet<DistributionOfMoney> DistributionOfMoney { get; set; }
-        public virtual DbSet<DistributionOfMoneyStepResult> DistributionOfMoneyStepResults { get; set; }
+        
     }
+
+    public AITCSMContext CreateDbContext(string[] args)
+    {
+        var optionsBuilder = new DbContextOptionsBuilder<AITCSMContext>();
+        optionsBuilder.UseSqlite("Data Source=c://AITCSM/AITCSM.db;");
+
+        return new AITCSMContext(optionsBuilder.Options);
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AITCSMContext).Assembly);
+    }
+
+    public virtual DbSet<DistributionOfMoney> DistributionOfMoney { get; set; }
+    public virtual DbSet<DistributionOfMoneyStepResult> DistributionOfMoneyStepResults { get; set; }
 }

@@ -21,7 +21,7 @@ public static class DI
             {
                 throw new InvalidOperationException("ServiceProvider is already initialized.");
             }
-            
+
             _serviceProvider = value;
         }
     }

@@ -17,7 +17,7 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         BindingPlugins.DataValidators.RemoveAt(0);
-        
+
         ServiceCollection services = new();
         services.AddAITCSMServices();
         DI.ServiceProvider = services.BuildServiceProvider();

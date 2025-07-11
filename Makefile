@@ -16,5 +16,8 @@ MIGRATION_NAME = "default"
 migrate:
 	dotnet ef migrations add $(MIGRATION_NAME) --project .\AITCSM.NET\ --output-dir Data/EF/Migrations
 
+updatedb:
+	dotnet ef database update --project .\AITCSM.NET\ --context AITCSMContext
+
 clean:
 	rm -rf Results

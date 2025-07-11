@@ -10,7 +10,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddDbContext<AITCSMContext>(options =>
            {
-               options.UseSqlite("Data Source=c://AITCSM/AITCSM.db;Version=3;");
+               options.UseSqlite("Data Source=c://AITCSM/AITCSM.db;");
            });
     }
 }
