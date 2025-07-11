@@ -1,7 +1,10 @@
 using AITCSM.NET.Simulation.Abstractions;
+using AITCSM.NET.Simulation.Implementations.CH01;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace AITCSM.NET.UI;
 
@@ -25,15 +28,15 @@ public partial class MainWindow : Window
         SimulationListBox.ItemsSource = types.Select(t => t.Name).ToList();
     }
 
-    private void StartButton_Click(object? sender, RoutedEventArgs e)
+    private async void StartButton_Click(object? sender, RoutedEventArgs e)
     {
-        string? selected = SimulationListBox.SelectedItem as string;
-        if (selected == null)
+        if (SimulationListBox.SelectedItem is not string selected)
         {
             ResultTextBlock.Text = "Please select a simulation.";
             return;
         }
         ResultTextBlock.Text = $"Simulation '{selected}' started (stub).";
-        // TODO: Add input, start/stop, and database logic
+
+        await Dispatcher.UIThread.InvokeAsync(DistributionOfMoneySimulation.DefaultSimulate);
     }
 }

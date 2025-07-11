@@ -1,8 +1,10 @@
-using AITCSM.NET.Data;
+using AITCSM.NET.Data.EF;
+using AITCSM.NET.Data.Entities;
 using AITCSM.NET.Simulation.Abstractions;
+using Avalonia.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Text.Json;
 
 namespace AITCSM.NET.Simulation.Implementations.CH01;
 
@@ -11,9 +13,9 @@ public class DistributionOfMoneySimulation :
                     IPlotable<DistributionOfMoneyStepResult>
 {
     public static DistributionOfMoney[] Inputs { get; } = [
-        new() {  NumberOfAgents= 100, InitialMoney= 1000.0D, NumberOfIterations= 100_000, InitialRandomSeed = 7, ResultPerSteps = 10},
-        new() {  NumberOfAgents= 100, InitialMoney= 1000.0D, NumberOfIterations= 200_000, InitialRandomSeed = 7, ResultPerSteps = 10},
-        new() {  NumberOfAgents= 100, InitialMoney= 1000.0D, NumberOfIterations= 400_000, InitialRandomSeed = 7, ResultPerSteps = 10}
+        new() {Id = 1,  NumberOfAgents= 100, InitialMoney= 1000.0D, NumberOfIterations= 100_000, InitialRandomSeed = 7, ResultPerSteps = 10},
+        new() {Id = 2,  NumberOfAgents= 100, InitialMoney= 1000.0D, NumberOfIterations= 200_000, InitialRandomSeed = 7, ResultPerSteps = 10},
+        new() {Id = 3,  NumberOfAgents= 100, InitialMoney= 1000.0D, NumberOfIterations= 400_000, InitialRandomSeed = 7, ResultPerSteps = 10}
     ];
 
     public static readonly Lazy<DistributionOfMoneySimulation> Instance = new(() => new DistributionOfMoneySimulation());
@@ -42,7 +44,9 @@ public class DistributionOfMoneySimulation :
         await Task.CompletedTask;
     }
 
-    public async IAsyncEnumerable<DistributionOfMoneyStepResult> Simulate(DistributionOfMoney input, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<DistributionOfMoneyStepResult> Simulate(
+        DistributionOfMoney input,
+        [EnumeratorCancellation] CancellationToken ct)
     {
         Debug.Assert(input is not null, "Input must not be null.");
         Debug.Assert(input.NumberOfAgents > 1, "NumberOfAgents must be greater than 1.");
@@ -99,23 +103,36 @@ public class DistributionOfMoneySimulation :
     public static async Task DefaultSimulate()
     {
         Debug.Assert(Inputs is not null && Inputs.Length > 0, "domInputs must not be null or empty.");
+        AITCSMContext context = DI.ServiceProvider.GetService<AITCSMContext>()!;
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            context.DistributionOfMoney.AddRangeAsync(Inputs);
+            context.SaveChangesAsync();
+        });
 
         IAsyncEnumerable<DistributionOfMoneyStepResult> outputTasks = Instance.Value.RunConcurrentSimulations(
             Inputs,
             degreeOfParallelism: Environment.ProcessorCount);
 
         int count = 0;
+        List<DistributionOfMoneyStepResult> results = [];
+
 
         await foreach (DistributionOfMoneyStepResult output in outputTasks)
         {
-            Console.WriteLine(JsonSerializer.Serialize(output, Common.JsonSerializerOptions));
-            Console.WriteLine();
+            results.Add(output);
+            count = (count + 1) % 1000;
 
-            ++count;
-
-            if (count / 10.0D > 1)
+            if (count == 0)
             {
-                return;
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    context.DistributionOfMoneyStepResults.AddRangeAsync(results);
+                    context.SaveChangesAsync();
+                });
+
+                results.Clear();
             }
         }
     }

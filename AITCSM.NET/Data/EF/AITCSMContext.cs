@@ -1,3 +1,4 @@
+using AITCSM.NET.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 

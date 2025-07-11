@@ -7,81 +7,80 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace AITCSM.NET.Data.EF.Migrations
+namespace AITCSM.NET.Data.EF.Migrations;
+
+[DbContext(typeof(AITCSMContext))]
+[Migration("20250709080351_Added_DistributionOfMoney_Simulation")]
+partial class Added_DistributionOfMoney_Simulation
 {
-    [DbContext(typeof(AITCSMContext))]
-    [Migration("20250709080351_Added_DistributionOfMoney_Simulation")]
-    partial class Added_DistributionOfMoney_Simulation
+    /// <inheritdoc />
+    protected override void BuildTargetModel(ModelBuilder modelBuilder)
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
-        {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.6");
+        modelBuilder.HasAnnotation("ProductVersion", "9.0.6");
 
-            modelBuilder.Entity("AITCSM.NET.Data.DistributionOfMoney", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+        modelBuilder.Entity("AITCSM.NET.Data.DistributionOfMoney", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("INTEGER");
 
-                    b.Property<double>("InitialMoney")
-                        .HasColumnType("REAL");
+                b.Property<double>("InitialMoney")
+                    .HasColumnType("REAL");
 
-                    b.Property<int>("InitialRandomSeed")
-                        .HasColumnType("INTEGER");
+                b.Property<int>("InitialRandomSeed")
+                    .HasColumnType("INTEGER");
 
-                    b.Property<int>("NumberOfAgents")
-                        .HasColumnType("INTEGER");
+                b.Property<int>("NumberOfAgents")
+                    .HasColumnType("INTEGER");
 
-                    b.Property<int>("NumberOfIterations")
-                        .HasColumnType("INTEGER");
+                b.Property<int>("NumberOfIterations")
+                    .HasColumnType("INTEGER");
 
-                    b.Property<int>("ResultPerSteps")
-                        .HasColumnType("INTEGER");
+                b.Property<int>("ResultPerSteps")
+                    .HasColumnType("INTEGER");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.ToTable("DistributionOfMoney", (string)null);
-                });
+                b.ToTable("DistributionOfMoney", (string)null);
+            });
 
-            modelBuilder.Entity("AITCSM.NET.Data.DistributionOfMoneyStepResult", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+        modelBuilder.Entity("AITCSM.NET.Data.DistributionOfMoneyStepResult", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("INTEGER");
 
-                    b.Property<int>("DistributionOfMoneyId")
-                        .HasColumnType("INTEGER");
+                b.Property<int>("DistributionOfMoneyId")
+                    .HasColumnType("INTEGER");
 
-                    b.Property<string>("MoneyDistributionData")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                b.Property<string>("MoneyDistributionData")
+                    .IsRequired()
+                    .HasColumnType("TEXT");
 
-                    b.Property<int>("StepNumber")
-                        .HasColumnType("INTEGER");
+                b.Property<int>("StepNumber")
+                    .HasColumnType("INTEGER");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("DistributionOfMoneyId");
+                b.HasIndex("DistributionOfMoneyId");
 
-                    b.ToTable("DistributionOfMoneyStepResults");
-                });
+                b.ToTable("DistributionOfMoneyStepResults");
+            });
 
-            modelBuilder.Entity("AITCSM.NET.Data.DistributionOfMoneyStepResult", b =>
-                {
-                    b.HasOne("AITCSM.NET.Data.DistributionOfMoney", null)
-                        .WithMany("Results")
-                        .HasForeignKey("DistributionOfMoneyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
+        modelBuilder.Entity("AITCSM.NET.Data.DistributionOfMoneyStepResult", b =>
+            {
+                b.HasOne("AITCSM.NET.Data.DistributionOfMoney", null)
+                    .WithMany("Results")
+                    .HasForeignKey("DistributionOfMoneyId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
 
-            modelBuilder.Entity("AITCSM.NET.Data.DistributionOfMoney", b =>
-                {
-                    b.Navigation("Results");
-                });
+        modelBuilder.Entity("AITCSM.NET.Data.DistributionOfMoney", b =>
+            {
+                b.Navigation("Results");
+            });
 #pragma warning restore 612, 618
-        }
     }
 }
