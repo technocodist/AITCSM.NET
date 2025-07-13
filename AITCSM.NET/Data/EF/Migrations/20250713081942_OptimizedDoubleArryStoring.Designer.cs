@@ -2,6 +2,7 @@
 using AITCSM.NET.Data.EF;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -9,9 +10,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AITCSM.NET.Data.EF.Migrations
 {
     [DbContext(typeof(AITCSMContext))]
-    partial class AITCSMContextModelSnapshot : ModelSnapshot
+    [Migration("20250713081942_OptimizedDoubleArryStoring")]
+    partial class OptimizedDoubleArryStoring
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.6");

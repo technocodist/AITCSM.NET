@@ -135,6 +135,14 @@ public class DistributionOfMoneySimulation :
                 results.Clear();
             }
         }
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                context.DistributionOfMoneyStepResults.AddRangeAsync(results);
+                context.SaveChangesAsync();
+            });
+
+        results.Clear();
     }
 
     public static async Task DefaultPlot()

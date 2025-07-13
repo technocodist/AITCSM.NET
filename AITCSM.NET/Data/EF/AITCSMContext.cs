@@ -10,7 +10,7 @@ public class AITCSMContext(DbContextOptions<AITCSMContext> options) :
 {
     public AITCSMContext() : this(new())
     {
-        
+
     }
 
     public AITCSMContext CreateDbContext(string[] args)

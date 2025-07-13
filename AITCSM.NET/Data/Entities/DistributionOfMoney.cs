@@ -1,5 +1,6 @@
 using AITCSM.NET.Data.Entities.Abstractions;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace AITCSM.NET.Data.Entities;
 
@@ -19,10 +20,38 @@ public class DistributionOfMoneyStepResult : EntityBase
 
     public int StepNumber { get; set; }
 
-    public string MoneyDistributionData
+    [JsonIgnore]
+    public byte[] MoneyDistributionBytes
     {
-        get => string.Join(';', MoneyDistribution);
-        set => MoneyDistribution = value == null ? [] : Array.ConvertAll(value.Split(';', StringSplitOptions.RemoveEmptyEntries), double.Parse);
+        get
+        {
+            var stream = new MemoryStream();
+            using (var writer = new BinaryWriter(stream))
+            {
+                writer.Write(MoneyDistribution.Length);
+                foreach (var d in MoneyDistribution)
+                {
+                    writer.Write(d);
+                }
+            }
+            return stream.ToArray();
+        }
+        set
+        {
+            if (value == null)
+            {
+                MoneyDistribution = [];
+                return;
+            }
+            var stream = new MemoryStream(value);
+            using var reader = new BinaryReader(stream);
+            var length = reader.ReadInt32();
+            MoneyDistribution = new double[length];
+            for (int i = 0; i < length; i++)
+            {
+                MoneyDistribution[i] = reader.ReadDouble();
+            }
+        }
     }
 
     [NotMapped]
