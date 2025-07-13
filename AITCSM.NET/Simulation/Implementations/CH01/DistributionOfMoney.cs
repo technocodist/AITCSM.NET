@@ -60,7 +60,7 @@ public class DistributionOfMoneySimulation :
 
         Random random = new(input.InitialRandomSeed);
 
-        for (int i = 0; i < input.NumberOfIterations; i++)
+        for (int i = 1; i <= input.NumberOfIterations; i++)
         {
             ct.ThrowIfCancellationRequested();
 
@@ -103,46 +103,63 @@ public class DistributionOfMoneySimulation :
     public static async Task DefaultSimulate()
     {
         Debug.Assert(Inputs is not null && Inputs.Length > 0, "domInputs must not be null or empty.");
-        AITCSMContext context = DI.ServiceProvider.GetService<AITCSMContext>()!;
 
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        await Task.Run(async () =>
         {
-            context.DistributionOfMoney.AddRangeAsync(Inputs);
-            context.SaveChangesAsync();
+            AITCSMContext context = DI.ServiceProvider.GetService<AITCSMContext>()!;
+            await context.DistributionOfMoney.AddRangeAsync(Inputs);
+            await context.SaveChangesAsync();
         });
 
         IAsyncEnumerable<DistributionOfMoneyStepResult> outputTasks = Instance.Value.RunConcurrentSimulations(
             Inputs,
             degreeOfParallelism: Environment.ProcessorCount);
 
-        int count = 0;
-        List<DistributionOfMoneyStepResult> results = [];
-
+        List<DistributionOfMoneyStepResult> resultsBatch = [];
+        const int batchSize = 100_000; 
 
         await foreach (DistributionOfMoneyStepResult output in outputTasks)
         {
-            results.Add(output);
-            count = (count + 1) % 1000;
+            resultsBatch.Add(output);
 
-            if (count == 0)
+            if (resultsBatch.Count >= batchSize)
             {
-                await Dispatcher.UIThread.InvokeAsync(() =>
+                List<DistributionOfMoneyStepResult> currentBatch = [.. resultsBatch];
+                resultsBatch.Clear();
+
+                _ = Task.Run(async () =>
                 {
-                    context.DistributionOfMoneyStepResults.AddRangeAsync(results);
-                    context.SaveChangesAsync();
+                    AITCSMContext context = DI.ServiceProvider.GetService<AITCSMContext>()!;
+                    await context.DistributionOfMoneyStepResults.AddRangeAsync(currentBatch);
+                    await context.SaveChangesAsync();
                 });
 
-                results.Clear();
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    Console.WriteLine($"Saved {currentBatch.Count} simulation results to DB.");
+                });
             }
         }
 
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        if (resultsBatch.Count > 0)
+        {
+            await Task.Run(async () =>
             {
-                context.DistributionOfMoneyStepResults.AddRangeAsync(results);
-                context.SaveChangesAsync();
+                AITCSMContext context = DI.ServiceProvider.GetService<AITCSMContext>()!;
+                await context.DistributionOfMoneyStepResults.AddRangeAsync(resultsBatch);
+                await context.SaveChangesAsync();
             });
 
-        results.Clear();
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                Console.WriteLine($"Saved remaining {resultsBatch.Count} simulation results to DB.");
+            });
+        }
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            Console.WriteLine("Simulation and all database saves complete!");
+        });
     }
 
     public static async Task DefaultPlot()
