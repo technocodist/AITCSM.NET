@@ -1,15 +1,21 @@
+using AITCSM.NET.Data.Entities;
 using AITCSM.NET.Simulation.Abstractions;
 using AITCSM.NET.Simulation.Implementations.CH01;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace AITCSM.NET.UI;
 
 public partial class MainWindow : Window
 {
+    private static readonly Dictionary<string, Func<Task>> SimulationHandlers = new()
+    {
+        {typeof(DistributionOfMoneySimulation).Name,  DistributionOfMoneySimulation.DefaultSimulate},
+        {typeof(DistributionOfMoneyWithSavingSimulation).Name,  DistributionOfMoneyWithSavingSimulation.DefaultSimulate},
+    };
+
     private readonly IServiceProvider _serviceProvider;
 
     public MainWindow(IServiceProvider serviceProvider)
@@ -35,8 +41,9 @@ public partial class MainWindow : Window
             ResultTextBlock.Text = "Please select a simulation.";
             return;
         }
+
         ResultTextBlock.Text = $"Simulation '{selected}' started (stub).";
 
-        await Dispatcher.UIThread.InvokeAsync(DistributionOfMoneySimulation.DefaultSimulate);
+        await Dispatcher.UIThread.InvokeAsync(SimulationHandlers[selected]);
     }
 }

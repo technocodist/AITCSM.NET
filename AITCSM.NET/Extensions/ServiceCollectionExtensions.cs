@@ -8,7 +8,7 @@ public static class ServiceCollectionExtensions
 {
     public static void AddAITCSMServices(this IServiceCollection services)
     {
-        services.AddDbContext<AITCSMContext>(options =>
+        services.AddDbContextPool<AITCSMContext>(options =>
            {
                options.UseSqlite("Data Source=c://AITCSM/AITCSM.db;");
            });

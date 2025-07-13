@@ -65,6 +65,58 @@ namespace AITCSM.NET.Data.EF.Migrations
                     b.ToTable("DistributionOfMoneyStepResults");
                 });
 
+            modelBuilder.Entity("AITCSM.NET.Data.Entities.DistributionOfMoneyWithSaving", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("InitialMoney")
+                        .HasColumnType("REAL");
+
+                    b.Property<int>("InitialRandomSeed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("Lambda")
+                        .HasColumnType("REAL");
+
+                    b.Property<int>("NumberOfAgents")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("NumberOfIterations")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ResultPerSteps")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DistributionOfMoneyWithSaving", (string)null);
+                });
+
+            modelBuilder.Entity("AITCSM.NET.Data.Entities.DistributionOfMoneyWithSavingStepResult", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DistributionOfMoneyWithSavingId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<byte[]>("MoneyDistributionBytes")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
+
+                    b.Property<int>("StepNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DistributionOfMoneyWithSavingId");
+
+                    b.ToTable("DistributionOfMoneyWithSavingStepResult");
+                });
+
             modelBuilder.Entity("AITCSM.NET.Data.Entities.DistributionOfMoneyStepResult", b =>
                 {
                     b.HasOne("AITCSM.NET.Data.Entities.DistributionOfMoney", null)
@@ -74,7 +126,21 @@ namespace AITCSM.NET.Data.EF.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("AITCSM.NET.Data.Entities.DistributionOfMoneyWithSavingStepResult", b =>
+                {
+                    b.HasOne("AITCSM.NET.Data.Entities.DistributionOfMoneyWithSaving", null)
+                        .WithMany("Results")
+                        .HasForeignKey("DistributionOfMoneyWithSavingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("AITCSM.NET.Data.Entities.DistributionOfMoney", b =>
+                {
+                    b.Navigation("Results");
+                });
+
+            modelBuilder.Entity("AITCSM.NET.Data.Entities.DistributionOfMoneyWithSaving", b =>
                 {
                     b.Navigation("Results");
                 });

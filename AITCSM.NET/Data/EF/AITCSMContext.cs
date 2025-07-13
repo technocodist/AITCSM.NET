@@ -30,4 +30,7 @@ public class AITCSMContext(DbContextOptions<AITCSMContext> options) :
 
     public virtual DbSet<DistributionOfMoney> DistributionOfMoney { get; set; }
     public virtual DbSet<DistributionOfMoneyStepResult> DistributionOfMoneyStepResults { get; set; }
+
+    public virtual DbSet<DistributionOfMoneyWithSaving> DistributionOfMoneyWithSaving { get; set; }
+    public virtual DbSet<DistributionOfMoneyWithSavingStepResult> DistributionOfMoneyWithSavingStepResult { get; set; }
 }

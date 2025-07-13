@@ -19,5 +19,8 @@ migrate:
 updatedb:
 	dotnet ef database update --project .\AITCSM.NET\ --context AITCSMContext
 
+dropdb:
+	dotnet ef database drop --force --project .\AITCSM.NET\ 
+
 clean:
 	rm -rf Results
