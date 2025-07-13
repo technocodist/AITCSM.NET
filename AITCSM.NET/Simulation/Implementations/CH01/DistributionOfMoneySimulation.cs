@@ -15,9 +15,9 @@ public class DistributionOfMoneySimulation :
                     IPlotable<DistributionOfMoneyStepResult>
 {
     public static DistributionOfMoney[] Inputs { get; } = [
-        new() {NumberOfAgents= 100, InitialMoney= 1000.0D, NumberOfIterations= 100_000, InitialRandomSeed = 7, ResultPerSteps = 10},
-        new() {NumberOfAgents= 100, InitialMoney= 1000.0D, NumberOfIterations= 200_000, InitialRandomSeed = 7, ResultPerSteps = 10},
-        new() {NumberOfAgents= 100, InitialMoney= 1000.0D, NumberOfIterations= 400_000, InitialRandomSeed = 7, ResultPerSteps = 10}
+        new() {NumberOfAgents= 100, InitialMoney= 1000.0D, NumberOfIterations= 100_000, InitialRandomSeed = 59, ResultPerSteps = 10},
+        new() {NumberOfAgents= 100, InitialMoney= 1000.0D, NumberOfIterations= 200_000, InitialRandomSeed = 59, ResultPerSteps = 10},
+        new() {NumberOfAgents= 100, InitialMoney= 1000.0D, NumberOfIterations= 400_000, InitialRandomSeed = 59, ResultPerSteps = 10}
     ];
 
     public static readonly Lazy<DistributionOfMoneySimulation> Instance = new(() => new DistributionOfMoneySimulation());
@@ -108,7 +108,8 @@ public class DistributionOfMoneySimulation :
 
         await Task.Run(async () =>
         {
-            AITCSMContext context = DI.ServiceProvider.GetService<AITCSMContext>()!;
+            using IServiceScope scope = DI.ServiceProvider.CreateScope();
+            AITCSMContext context = scope.ServiceProvider.GetRequiredService<AITCSMContext>();
             await context.DistributionOfMoney.AddRangeAsync(Inputs);
             await context.SaveChangesAsync();
         });
@@ -118,46 +119,67 @@ public class DistributionOfMoneySimulation :
             degreeOfParallelism: Environment.ProcessorCount);
 
         const int batchSize = 10_000;
-        ConcurrentBag<DistributionOfMoneyStepResult> resultsBatch = [];
+        ConcurrentBag<DistributionOfMoneyStepResult> resultsBag = [];
 
         await foreach (DistributionOfMoneyStepResult output in outputTasks)
         {
-            resultsBatch.Add(output);
+            resultsBag.Add(output);
 
-            if (resultsBatch.Count >= batchSize)
+            if (resultsBag.Count >= batchSize)
             {
-                ConcurrentBag<DistributionOfMoneyStepResult> currentBatch = [.. resultsBatch];
-                resultsBatch.Clear();
-
-                _ = Task.Run(async () =>
+                List<DistributionOfMoneyStepResult> currentBatch = new();
+                while (resultsBag.TryTake(out DistributionOfMoneyStepResult? item))
                 {
-                    using AITCSMContext context = DI.ServiceProvider.GetService<AITCSMContext>()!;
-                    await context.DistributionOfMoneyStepResults.AddRangeAsync(currentBatch);
+                    if (item != null)
+                    {
+                        currentBatch.Add(item);
+                    }
+                }
+
+                if (currentBatch.Count > 0)
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        using IServiceScope scope = DI.ServiceProvider.CreateScope();
+                        AITCSMContext context = scope.ServiceProvider.GetRequiredService<AITCSMContext>();
+                        await context.DistributionOfMoneyStepResults.AddRangeAsync(currentBatch);
+                        await context.SaveChangesAsync();
+                    });
+
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        Console.WriteLine($"Saved {currentBatch.Count} simulation results to DB.");
+                    });
+                }
+            }
+        }
+
+        if (!resultsBag.IsEmpty)
+        {
+            List<DistributionOfMoneyStepResult> finalBatch = new();
+            while (resultsBag.TryTake(out DistributionOfMoneyStepResult? item))
+            {
+                if (item != null)
+                {
+                    finalBatch.Add(item);
+                }
+            }
+
+            if (finalBatch.Count > 0)
+            {
+                await Task.Run(async () =>
+                {
+                    using IServiceScope scope = DI.ServiceProvider.CreateScope();
+                    AITCSMContext context = scope.ServiceProvider.GetRequiredService<AITCSMContext>();
+                    await context.DistributionOfMoneyStepResults.AddRangeAsync(finalBatch);
                     await context.SaveChangesAsync();
                 });
 
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    Console.WriteLine($"Saved {currentBatch.Count} simulation results to DB.");
+                    Console.WriteLine($"Saved remaining {finalBatch.Count} simulation results to DB.");
                 });
             }
-        }
-
-        if (!resultsBatch.IsEmpty)
-        {
-            ConcurrentBag<DistributionOfMoneyStepResult> currentBatch = [.. resultsBatch];
-
-            await Task.Run(async () =>
-            {
-                using AITCSMContext context = DI.ServiceProvider.GetService<AITCSMContext>()!;
-                await context.DistributionOfMoneyStepResults.AddRangeAsync(currentBatch);
-                await context.SaveChangesAsync();
-            });
-
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                Console.WriteLine($"Saved remaining {resultsBatch.Count} simulation results to DB.");
-            });
         }
 
         await Dispatcher.UIThread.InvokeAsync(() =>

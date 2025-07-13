@@ -15,7 +15,7 @@ public class AITCSMContext(DbContextOptions<AITCSMContext> options) :
 
     public AITCSMContext CreateDbContext(string[] args)
     {
-        var optionsBuilder = new DbContextOptionsBuilder<AITCSMContext>();
+        DbContextOptionsBuilder<AITCSMContext> optionsBuilder = new DbContextOptionsBuilder<AITCSMContext>();
         optionsBuilder.UseSqlite("Data Source=c://AITCSM/AITCSM.db;");
 
         return new AITCSMContext(optionsBuilder.Options);

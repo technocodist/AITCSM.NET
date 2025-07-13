@@ -27,11 +27,11 @@ public class DistributionOfMoneyWithSavingStepResult : EntityBase
     {
         get
         {
-            var stream = new MemoryStream();
-            using (var writer = new BinaryWriter(stream))
+            MemoryStream stream = new MemoryStream();
+            using (BinaryWriter writer = new BinaryWriter(stream))
             {
                 writer.Write(MoneyDistribution.Length);
-                foreach (var d in MoneyDistribution)
+                foreach (double d in MoneyDistribution)
                 {
                     writer.Write(d);
                 }
@@ -45,9 +45,9 @@ public class DistributionOfMoneyWithSavingStepResult : EntityBase
                 MoneyDistribution = [];
                 return;
             }
-            var stream = new MemoryStream(value);
-            using var reader = new BinaryReader(stream);
-            var length = reader.ReadInt32();
+            MemoryStream stream = new MemoryStream(value);
+            using BinaryReader reader = new BinaryReader(stream);
+            int length = reader.ReadInt32();
             MoneyDistribution = new double[length];
             for (int i = 0; i < length; i++)
             {
