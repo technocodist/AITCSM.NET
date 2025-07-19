@@ -146,59 +146,41 @@ public class FreeFallSimulation : ISimulation<FreeFall, FreeFallStepResult>, IPl
 
             if (resultsBag.Count >= Common.BatchSize)
             {
-                List<FreeFallStepResult> currentBatch = new();
-                while (resultsBag.TryTake(out FreeFallStepResult? item))
-                {
-                    if (item != null)
-                    {
-                        currentBatch.Add(item);
-                    }
-                }
-
-                if (currentBatch.Count > 0)
-                {
-                    _ = Task.Run(async () =>
-                    {
-                        using IServiceScope scope = DI.ServiceProvider.CreateScope();
-                        AITCSMContext context = scope.ServiceProvider.GetRequiredService<AITCSMContext>();
-                        await context.FreeFallStepResults.AddRangeAsync(currentBatch);
-                        await context.SaveChangesAsync();
-                    });
-
-                    await Dispatcher.UIThread.InvokeAsync(() =>
-                    {
-                        Console.WriteLine($"Saved {currentBatch.Count} simulation results to DB.");
-                    });
-                }
-            }
-        }
-
-        if (!resultsBag.IsEmpty)
-        {
-            List<FreeFallStepResult> finalBatch = new();
-            while (resultsBag.TryTake(out FreeFallStepResult? item))
-            {
-                if (item != null)
-                {
-                    finalBatch.Add(item);
-                }
-            }
-
-            if (finalBatch.Count > 0)
-            {
-                await Task.Run(async () =>
+                List<FreeFallStepResult> currentBatch = [.. resultsBag];
+                resultsBag.Clear();
+                _ = Task.Run(async () =>
                 {
                     using IServiceScope scope = DI.ServiceProvider.CreateScope();
                     AITCSMContext context = scope.ServiceProvider.GetRequiredService<AITCSMContext>();
-                    await context.FreeFallStepResults.AddRangeAsync(finalBatch);
+                    await context.FreeFallStepResults.AddRangeAsync(currentBatch);
                     await context.SaveChangesAsync();
                 });
 
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    Console.WriteLine($"Saved remaining {finalBatch.Count} simulation results to DB.");
+                    Console.WriteLine($"Saved {currentBatch.Count} simulation results to DB.");
                 });
+
             }
+        }
+
+        if (!resultsBag.IsEmpty)
+        {
+            List<FreeFallStepResult> finalBatch = [.. resultsBag];
+            resultsBag.Clear();
+
+            await Task.Run(async () =>
+            {
+                using IServiceScope scope = DI.ServiceProvider.CreateScope();
+                AITCSMContext context = scope.ServiceProvider.GetRequiredService<AITCSMContext>();
+                await context.FreeFallStepResults.AddRangeAsync(finalBatch);
+                await context.SaveChangesAsync();
+            });
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                Console.WriteLine($"Saved remaining {finalBatch.Count} simulation results to DB.");
+            });
         }
 
         await Dispatcher.UIThread.InvokeAsync(() =>

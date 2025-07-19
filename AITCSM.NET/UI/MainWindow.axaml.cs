@@ -29,9 +29,7 @@ public partial class MainWindow : Window
 
     private void MainWindow_Opened(object? sender, EventArgs e)
     {
-        // Use reflection to find all ISimulation<,> implementations
-        Type simType = typeof(ISimulation<,>);
-        SimulationListBox.ItemsSource = SimulationHandlers.Keys.ToList();
+        SimulationListBox.ItemsSource = SimulationHandlers.Keys;
     }
 
     private async void StartButton_Click(object? sender, RoutedEventArgs e)

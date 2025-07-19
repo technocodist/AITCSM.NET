@@ -125,14 +125,8 @@ public class DistributionOfMoneySimulation :
 
             if (resultsBag.Count >= Common.BatchSize)
             {
-                List<DistributionOfMoneyStepResult> currentBatch = new();
-                while (resultsBag.TryTake(out DistributionOfMoneyStepResult? item))
-                {
-                    if (item != null)
-                    {
-                        currentBatch.Add(item);
-                    }
-                }
+                List<DistributionOfMoneyStepResult> currentBatch = [.. resultsBag];
+                resultsBag.Clear();
 
                 if (currentBatch.Count > 0)
                 {
@@ -154,30 +148,21 @@ public class DistributionOfMoneySimulation :
 
         if (!resultsBag.IsEmpty)
         {
-            List<DistributionOfMoneyStepResult> finalBatch = new();
-            while (resultsBag.TryTake(out DistributionOfMoneyStepResult? item))
-            {
-                if (item != null)
-                {
-                    finalBatch.Add(item);
-                }
-            }
+            List<DistributionOfMoneyStepResult> finalBatch = [.. resultsBag];
+            resultsBag.Clear();
 
-            if (finalBatch.Count > 0)
+            await Task.Run(async () =>
             {
-                await Task.Run(async () =>
-                {
-                    using IServiceScope scope = DI.ServiceProvider.CreateScope();
-                    AITCSMContext context = scope.ServiceProvider.GetRequiredService<AITCSMContext>();
-                    await context.DistributionOfMoneyStepResults.AddRangeAsync(finalBatch);
-                    await context.SaveChangesAsync();
-                });
+                using IServiceScope scope = DI.ServiceProvider.CreateScope();
+                AITCSMContext context = scope.ServiceProvider.GetRequiredService<AITCSMContext>();
+                await context.DistributionOfMoneyStepResults.AddRangeAsync(finalBatch);
+                await context.SaveChangesAsync();
+            });
 
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    Console.WriteLine($"Saved remaining {finalBatch.Count} simulation results to DB.");
-                });
-            }
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                Console.WriteLine($"Saved remaining {finalBatch.Count} simulation results to DB.");
+            });
         }
 
         await Dispatcher.UIThread.InvokeAsync(() =>

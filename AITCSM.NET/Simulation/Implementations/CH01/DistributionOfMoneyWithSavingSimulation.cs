@@ -130,43 +130,28 @@ public class DistributionOfMoneyWithSavingSimulation :
 
             if (resultsBag.Count >= Common.BatchSize)
             {
-                List<DistributionOfMoneyWithSavingStepResult> currentBatch = new();
-                while (resultsBag.TryTake(out DistributionOfMoneyWithSavingStepResult? item))
-                {
-                    if (item != null)
-                    {
-                        currentBatch.Add(item);
-                    }
-                }
+                List<DistributionOfMoneyWithSavingStepResult> currentBatch = [.. resultsBag];
+                resultsBag.Clear();
 
-                if (currentBatch.Count > 0)
+                _ = Task.Run(async () =>
                 {
-                    _ = Task.Run(async () =>
-                    {
-                        using IServiceScope scope = DI.ServiceProvider.CreateScope();
-                        AITCSMContext context = scope.ServiceProvider.GetRequiredService<AITCSMContext>();
-                        await context.DistributionOfMoneyWithSavingStepResults.AddRangeAsync(currentBatch);
-                        await context.SaveChangesAsync();
-                    });
+                    using IServiceScope scope = DI.ServiceProvider.CreateScope();
+                    AITCSMContext context = scope.ServiceProvider.GetRequiredService<AITCSMContext>();
+                    await context.DistributionOfMoneyWithSavingStepResults.AddRangeAsync(currentBatch);
+                    await context.SaveChangesAsync();
+                });
 
-                    await Dispatcher.UIThread.InvokeAsync(() =>
-                    {
-                        Console.WriteLine($"Saved {currentBatch.Count} simulation results to DB.");
-                    });
-                }
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    Console.WriteLine($"Saved {currentBatch.Count} simulation results to DB.");
+                });
             }
         }
 
         if (!resultsBag.IsEmpty)
         {
-            List<DistributionOfMoneyWithSavingStepResult> finalBatch = new();
-            while (resultsBag.TryTake(out DistributionOfMoneyWithSavingStepResult? item))
-            {
-                if (item != null)
-                {
-                    finalBatch.Add(item);
-                }
-            }
+            List<DistributionOfMoneyWithSavingStepResult> finalBatch = [.. resultsBag];
+            resultsBag.Clear();
 
             if (finalBatch.Count > 0)
             {
