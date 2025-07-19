@@ -25,8 +25,8 @@ public class DistributionOfMoneyStepResult : EntityBase
     {
         get
         {
-            MemoryStream stream = new MemoryStream();
-            using (BinaryWriter writer = new BinaryWriter(stream))
+            using MemoryStream stream = new();
+            using (BinaryWriter writer = new(stream))
             {
                 writer.Write(MoneyDistribution.Length);
                 foreach (double d in MoneyDistribution)
@@ -43,8 +43,8 @@ public class DistributionOfMoneyStepResult : EntityBase
                 MoneyDistribution = [];
                 return;
             }
-            MemoryStream stream = new MemoryStream(value);
-            using BinaryReader reader = new BinaryReader(stream);
+            using MemoryStream stream = new(value);
+            using BinaryReader reader = new(stream);
             int length = reader.ReadInt32();
             MoneyDistribution = new double[length];
             for (int i = 0; i < length; i++)

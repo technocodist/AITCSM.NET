@@ -15,7 +15,7 @@ public class AITCSMContext(DbContextOptions<AITCSMContext> options) :
 
     public AITCSMContext CreateDbContext(string[] args)
     {
-        DbContextOptionsBuilder<AITCSMContext> optionsBuilder = new DbContextOptionsBuilder<AITCSMContext>();
+        DbContextOptionsBuilder<AITCSMContext> optionsBuilder = new();
         optionsBuilder.UseSqlite("Data Source=c://AITCSM/AITCSM.db;");
 
         return new AITCSMContext(optionsBuilder.Options);
@@ -32,5 +32,11 @@ public class AITCSMContext(DbContextOptions<AITCSMContext> options) :
     public virtual DbSet<DistributionOfMoneyStepResult> DistributionOfMoneyStepResults { get; set; }
 
     public virtual DbSet<DistributionOfMoneyWithSaving> DistributionOfMoneyWithSaving { get; set; }
-    public virtual DbSet<DistributionOfMoneyWithSavingStepResult> DistributionOfMoneyWithSavingStepResult { get; set; }
+    public virtual DbSet<DistributionOfMoneyWithSavingStepResult> DistributionOfMoneyWithSavingStepResults { get; set; }
+
+    public virtual DbSet<FreeFall> FreeFall { get; set; }
+    public virtual DbSet<FreeFallStepResult> FreeFallStepResults { get; set; }
+
+    public virtual DbSet<FreeFallWithAirResistance> FreeFallWithAirResistance { get; set; }
+    public virtual DbSet<FreeFallWithAirResistanceStepResult> FreeFallWithAirResistanceStepResult { get; set; }
 }

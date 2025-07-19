@@ -1,7 +1,6 @@
 using AITCSM.NET.Data.EF;
 using AITCSM.NET.Data.Entities;
 using AITCSM.NET.Simulation.Abstractions;
-using Avalonia.Animation.Easings;
 using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
@@ -116,16 +115,15 @@ public class DistributionOfMoneySimulation :
 
         IAsyncEnumerable<DistributionOfMoneyStepResult> outputTasks = Instance.Value.RunConcurrentSimulations(
             Inputs,
-            degreeOfParallelism: Environment.ProcessorCount);
+            degreeOfParallelism: Environment.ProcessorCount / 2);
 
-        const int batchSize = 10_000;
         ConcurrentBag<DistributionOfMoneyStepResult> resultsBag = [];
 
         await foreach (DistributionOfMoneyStepResult output in outputTasks)
         {
             resultsBag.Add(output);
 
-            if (resultsBag.Count >= batchSize)
+            if (resultsBag.Count >= Common.BatchSize)
             {
                 List<DistributionOfMoneyStepResult> currentBatch = new();
                 while (resultsBag.TryTake(out DistributionOfMoneyStepResult? item))
@@ -186,15 +184,5 @@ public class DistributionOfMoneySimulation :
         {
             Console.WriteLine("Simulation and all database saves complete!");
         });
-    }
-
-    public static async Task DefaultPlot()
-    {
-        DistributionOfMoneyStepResult?[] outputs = Common.ReadToObject<DistributionOfMoneyStepResult>(typeof(DistributionOfMoneyStepResult).FullName!);
-        Debug.Assert(outputs is not null, "ReadToObject returned null.");
-
-        await Common.BatchOperate(
-            outputs.Where(output => output is { }).Cast<DistributionOfMoneyStepResult>().ToArray(),
-            output => Instance.Value.Plot(output, Common.PlottingOptions));
     }
 }

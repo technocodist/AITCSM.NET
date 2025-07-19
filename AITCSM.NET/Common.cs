@@ -10,6 +10,8 @@ namespace AITCSM.NET;
 
 public static class Common
 {
+    public static readonly int BatchSize = 10_000;
+
     public static JsonSerializerOptions JsonSerializerOptions { get; } = new()
     {
         WriteIndented = true,
@@ -63,7 +65,7 @@ public static class Common
         this ISimulation<TIn, TOut> simulator,
         IEnumerable<TIn> inputs,
         int degreeOfParallelism,
-        int channelCapacity = 1000,
+        int channelCapacity = 5_000,
         [EnumeratorCancellation] CancellationToken ct = default)
         where TIn : EntityBase
         where TOut : EntityBase

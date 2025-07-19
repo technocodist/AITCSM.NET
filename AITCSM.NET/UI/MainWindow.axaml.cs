@@ -1,4 +1,3 @@
-using AITCSM.NET.Data.Entities;
 using AITCSM.NET.Simulation.Abstractions;
 using AITCSM.NET.Simulation.Implementations.CH01;
 using Avalonia.Controls;
@@ -14,6 +13,8 @@ public partial class MainWindow : Window
     {
         {typeof(DistributionOfMoneySimulation).Name,  DistributionOfMoneySimulation.DefaultSimulate},
         {typeof(DistributionOfMoneyWithSavingSimulation).Name,  DistributionOfMoneyWithSavingSimulation.DefaultSimulate},
+        {typeof(FreeFallSimulation).Name,  FreeFallSimulation.DefaultSimulate},
+        {typeof(FreeFallWithAirResistanceSimulation).Name,  FreeFallWithAirResistanceSimulation.DefaultSimulate},
     };
 
     private readonly IServiceProvider _serviceProvider;
@@ -30,8 +31,7 @@ public partial class MainWindow : Window
     {
         // Use reflection to find all ISimulation<,> implementations
         Type simType = typeof(ISimulation<,>);
-        List<Type> types = [.. Assembly.GetExecutingAssembly().GetTypes().Where(t => t.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == simType) && !t.IsInterface && !t.IsAbstract)];
-        SimulationListBox.ItemsSource = types.Select(t => t.Name).ToList();
+        SimulationListBox.ItemsSource = SimulationHandlers.Keys.ToList();
     }
 
     private async void StartButton_Click(object? sender, RoutedEventArgs e)

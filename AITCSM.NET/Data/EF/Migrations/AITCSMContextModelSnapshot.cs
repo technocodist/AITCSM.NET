@@ -114,7 +114,147 @@ namespace AITCSM.NET.Data.EF.Migrations
 
                     b.HasIndex("DistributionOfMoneyWithSavingId");
 
-                    b.ToTable("DistributionOfMoneyWithSavingStepResult");
+                    b.ToTable("DistributionOfMoneyWithSavingStepResults");
+                });
+
+            modelBuilder.Entity("AITCSM.NET.Data.Entities.FreeFall", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("Gravity")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("InitialHeight")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("InitialVelocity")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("Mass")
+                        .HasColumnType("REAL");
+
+                    b.Property<int>("ResultPerSteps")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("StepCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("TimeStep")
+                        .HasColumnType("REAL");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FreeFall", (string)null);
+                });
+
+            modelBuilder.Entity("AITCSM.NET.Data.Entities.FreeFallStepResult", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FreeFallId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<byte[]>("PositionsBytes")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
+
+                    b.Property<int>("StepNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<byte[]>("TimeStepsBytes")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
+
+                    b.Property<byte[]>("VelocitiesBytes")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FreeFallId");
+
+                    b.ToTable("FreeFallStepResults");
+                });
+
+            modelBuilder.Entity("AITCSM.NET.Data.Entities.FreeFallWithAirResistance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("DragCoeffecient")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("Gravity")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("InitialHeight")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("InitialVelocity")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("Mass")
+                        .HasColumnType("REAL");
+
+                    b.Property<int>("ResultPerSteps")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("StepCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("TimeStep")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("VelocityEffectivePower")
+                        .HasColumnType("REAL");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FreeFallWithAirResistance", (string)null);
+                });
+
+            modelBuilder.Entity("AITCSM.NET.Data.Entities.FreeFallWithAirResistanceStepResult", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<byte[]>("DragForcesBytes")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
+
+                    b.Property<int>("FreeFallWithAirResistanceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<byte[]>("NetForcesBytes")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
+
+                    b.Property<byte[]>("PositionsBytes")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
+
+                    b.Property<int>("StepNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<byte[]>("TimeStepsBytes")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
+
+                    b.Property<byte[]>("VelocitiesBytes")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FreeFallWithAirResistanceId");
+
+                    b.ToTable("FreeFallWithAirResistanceStepResult");
                 });
 
             modelBuilder.Entity("AITCSM.NET.Data.Entities.DistributionOfMoneyStepResult", b =>
@@ -135,12 +275,40 @@ namespace AITCSM.NET.Data.EF.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("AITCSM.NET.Data.Entities.FreeFallStepResult", b =>
+                {
+                    b.HasOne("AITCSM.NET.Data.Entities.FreeFall", null)
+                        .WithMany("Results")
+                        .HasForeignKey("FreeFallId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AITCSM.NET.Data.Entities.FreeFallWithAirResistanceStepResult", b =>
+                {
+                    b.HasOne("AITCSM.NET.Data.Entities.FreeFallWithAirResistance", null)
+                        .WithMany("Results")
+                        .HasForeignKey("FreeFallWithAirResistanceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("AITCSM.NET.Data.Entities.DistributionOfMoney", b =>
                 {
                     b.Navigation("Results");
                 });
 
             modelBuilder.Entity("AITCSM.NET.Data.Entities.DistributionOfMoneyWithSaving", b =>
+                {
+                    b.Navigation("Results");
+                });
+
+            modelBuilder.Entity("AITCSM.NET.Data.Entities.FreeFall", b =>
+                {
+                    b.Navigation("Results");
+                });
+
+            modelBuilder.Entity("AITCSM.NET.Data.Entities.FreeFallWithAirResistance", b =>
                 {
                     b.Navigation("Results");
                 });

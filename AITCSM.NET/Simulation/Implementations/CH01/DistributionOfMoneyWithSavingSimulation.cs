@@ -120,16 +120,15 @@ public class DistributionOfMoneyWithSavingSimulation :
 
         IAsyncEnumerable<DistributionOfMoneyWithSavingStepResult> outputTasks = Instance.Value.RunConcurrentSimulations(
             Inputs,
-            degreeOfParallelism: Environment.ProcessorCount);
+            degreeOfParallelism: Environment.ProcessorCount / 2);
 
-        const int batchSize = 10_000;
         ConcurrentBag<DistributionOfMoneyWithSavingStepResult> resultsBag = [];
 
         await foreach (DistributionOfMoneyWithSavingStepResult output in outputTasks)
         {
             resultsBag.Add(output);
 
-            if (resultsBag.Count >= batchSize)
+            if (resultsBag.Count >= Common.BatchSize)
             {
                 List<DistributionOfMoneyWithSavingStepResult> currentBatch = new();
                 while (resultsBag.TryTake(out DistributionOfMoneyWithSavingStepResult? item))
@@ -146,7 +145,7 @@ public class DistributionOfMoneyWithSavingSimulation :
                     {
                         using IServiceScope scope = DI.ServiceProvider.CreateScope();
                         AITCSMContext context = scope.ServiceProvider.GetRequiredService<AITCSMContext>();
-                        await context.DistributionOfMoneyWithSavingStepResult.AddRangeAsync(currentBatch);
+                        await context.DistributionOfMoneyWithSavingStepResults.AddRangeAsync(currentBatch);
                         await context.SaveChangesAsync();
                     });
 
@@ -175,7 +174,7 @@ public class DistributionOfMoneyWithSavingSimulation :
                 {
                     using IServiceScope scope = DI.ServiceProvider.CreateScope();
                     AITCSMContext context = scope.ServiceProvider.GetRequiredService<AITCSMContext>();
-                    await context.DistributionOfMoneyWithSavingStepResult.AddRangeAsync(finalBatch);
+                    await context.DistributionOfMoneyWithSavingStepResults.AddRangeAsync(finalBatch);
                     await context.SaveChangesAsync();
                 });
 
@@ -190,15 +189,5 @@ public class DistributionOfMoneyWithSavingSimulation :
         {
             Console.WriteLine("Simulation and all database saves complete!");
         });
-    }
-
-    public static async Task DefaultPlot()
-    {
-        DistributionOfMoneyWithSavingStepResult?[] outputs = Common.ReadToObject<DistributionOfMoneyWithSavingStepResult>(typeof(DistributionOfMoneyStepResult).FullName!);
-        Debug.Assert(outputs is not null, "ReadToObject returned null.");
-
-        await Common.BatchOperate(
-            outputs.Where(output => output is { }).Cast<DistributionOfMoneyWithSavingStepResult>().ToArray(),
-            output => Instance.Value.Plot(output, Common.PlottingOptions));
     }
 }
